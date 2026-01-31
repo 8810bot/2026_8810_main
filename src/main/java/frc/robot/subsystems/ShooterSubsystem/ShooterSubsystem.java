@@ -19,7 +19,7 @@ public class ShooterSubsystem extends SubsystemBase {
     if (Robot.isReal()) {
       io = new ShooterIOPheonix6();
     } else {
-      io = new ShooterIO() {};
+      io = new ShooterIOSim();
     }
   }
 

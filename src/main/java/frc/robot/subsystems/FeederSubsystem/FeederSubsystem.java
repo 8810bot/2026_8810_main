@@ -19,7 +19,7 @@ public class FeederSubsystem extends SubsystemBase {
     if (Robot.isReal()) {
       io = new FeederIOPheonix6();
     } else {
-      io = new FeederIO() {};
+      io = new FeederIOSim();
     }
   }
 
