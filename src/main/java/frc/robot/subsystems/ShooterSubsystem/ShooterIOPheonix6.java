@@ -4,7 +4,7 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -14,8 +14,7 @@ import frc.robot.Constants;
 public class ShooterIOPheonix6 implements ShooterIO {
   private static TalonFX shooterMotor1, shooterMotor2, shooterMotor3, hoodMotor;
   private final VelocityTorqueCurrentFOC shooterVelocityRequest = new VelocityTorqueCurrentFOC(0.0);
-  private final MotionMagicTorqueCurrentFOC hoodMotionMagicRequest =
-      new MotionMagicTorqueCurrentFOC(0.0);
+  private final MotionMagicVoltage hoodMotionMagicRequest = new MotionMagicVoltage(0.0);
   private final VoltageOut shooterVoltageRequest = new VoltageOut(0.0);
   private final VoltageOut hoodVoltageRequest = new VoltageOut(0.0);
 
