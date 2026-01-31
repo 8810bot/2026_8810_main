@@ -5,81 +5,81 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import org.littletonrobotics.junction.Logger;
 
-public class FeederSubsystem extends SubsystemBase{
-    public static FeederSubsystem m_Instance = null;
+public class FeederSubsystem extends SubsystemBase {
+  public static FeederSubsystem m_Instance = null;
 
-    private final FeederIO io;
-    private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
+  private final FeederIO io;
+  private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
-    public static FeederSubsystem getInstance() {
-        return m_Instance == null ? m_Instance = new FeederSubsystem() : m_Instance;
+  public static FeederSubsystem getInstance() {
+    return m_Instance == null ? m_Instance = new FeederSubsystem() : m_Instance;
+  }
+
+  public FeederSubsystem() {
+    if (Robot.isReal()) {
+      io = new FeederIOPheonix6();
+    } else {
+      io = new FeederIO() {};
     }
+  }
 
-    public FeederSubsystem() {
-        if (Robot.isReal()) {
-            io = new FeederIOPheonix6();
-        } else {
-            io = new FeederIO() {};
-        }
-    }
+  public void setBeltRps(double rps) {
+    io.BeltSetRps(rps);
+  }
 
-    public void setBeltRps(double rps) {
-        io.BeltSetRps(rps);
-    }
+  public void setIndexerRps(double rps) {
+    io.IndexerSetRps(rps);
+  }
 
-    public void setIndexerRps(double rps) {
-        io.IndexerSetRps(rps);
-    }
+  public void setBeltVoltage(double voltage) {
+    io.BeltSetV(voltage);
+  }
 
-    public void setBeltVoltage(double voltage) {
-        io.BeltSetV(voltage);
-    }
+  public void setIndexerVoltage(double voltage) {
+    io.IndexerSetV(voltage);
+  }
 
-    public void setIndexerVoltage(double voltage) {
-        io.IndexerSetV(voltage);
-    }
+  public double getBeltVelocityRps() {
+    return inputs.BeltVelocityRPS;
+  }
 
-    public double getBeltVelocityRps() {
-        return inputs.BeltVelocityRPS;
-    }
+  public double getIndexerVelocityRps() {
+    return inputs.IndexerVelocityRPS;
+  }
 
-    public double getIndexerVelocityRps() {
-        return inputs.IndexerVelocityRPS;
-    }
+  public double getBeltCurrentAmps() {
+    return inputs.BeltCurrentAMPS;
+  }
 
-    public double getBeltCurrentAmps() {
-        return inputs.BeltCurrentAMPS;
-    }
+  public double getIndexerCurrentAmps() {
+    return inputs.IndexerCurrentAMPS;
+  }
 
-    public double getIndexerCurrentAmps() {
-        return inputs.IndexerCurrentAMPS;
-    }
+  public double getBeltVoltage() {
+    return inputs.BeltVoltageV;
+  }
 
-    public double getBeltVoltage() {
-        return inputs.BeltVoltageV;
-    }
+  public double getIndexerVoltage() {
+    return inputs.IndexerVoltageV;
+  }
 
-    public double getIndexerVoltage() {
-        return inputs.IndexerVoltageV;
-    }
+  public void processLog() {
+    io.updateInputs(inputs);
+    Logger.processInputs("Feeder", inputs);
+  }
 
-    public void processLog() {
-        io.updateInputs(inputs);
-        Logger.processInputs("Feeder", inputs);
-    }
+  public void processDashboard() {
+    SmartDashboard.putNumber("Feeder/BeltVelocityRPS", inputs.BeltVelocityRPS);
+    SmartDashboard.putNumber("Feeder/IndexerVelocityRPS", inputs.IndexerVelocityRPS);
+    SmartDashboard.putNumber("Feeder/BeltCurrentAMPS", inputs.BeltCurrentAMPS);
+    SmartDashboard.putNumber("Feeder/IndexerCurrentAMPS", inputs.IndexerCurrentAMPS);
+    SmartDashboard.putNumber("Feeder/BeltVoltageV", inputs.BeltVoltageV);
+    SmartDashboard.putNumber("Feeder/IndexerVoltageV", inputs.IndexerVoltageV);
+  }
 
-    public void processDashboard() {
-        SmartDashboard.putNumber("Feeder/BeltVelocityRPS", inputs.BeltVelocityRPS);
-        SmartDashboard.putNumber("Feeder/IndexerVelocityRPS", inputs.IndexerVelocityRPS);
-        SmartDashboard.putNumber("Feeder/BeltCurrentAMPS", inputs.BeltCurrentAMPS);
-        SmartDashboard.putNumber("Feeder/IndexerCurrentAMPS", inputs.IndexerCurrentAMPS);
-        SmartDashboard.putNumber("Feeder/BeltVoltageV", inputs.BeltVoltageV);
-        SmartDashboard.putNumber("Feeder/IndexerVoltageV", inputs.IndexerVoltageV);
-    }
-
-    @Override
-    public void periodic() {
-        processLog();
-        processDashboard();
-    }
+  @Override
+  public void periodic() {
+    processLog();
+    processDashboard();
+  }
 }

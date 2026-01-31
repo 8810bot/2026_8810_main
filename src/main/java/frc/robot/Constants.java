@@ -34,6 +34,7 @@ public final class Constants {
     public static final int shooterMotor1CANId = 1;
     public static final int shooterMotor2CANId = 2;
     public static final int shooterMotor3CANId = 3;
+    public static final int hoodMotorCANId = 8;
     public static final int beltMotorCANId = 4;
     public static final int indexerMotorCANId = 5;
     public static final int intakePivotMotorCANId = 6;
@@ -78,5 +79,23 @@ public final class Constants {
     public static final double beltKD = 0;
     public static final double beltKS = 0;
     public static final double beltKV = 0;
+  }
+
+  public static class ShooterSubsystemPID {
+    public static final double shooterKP = 0;
+    public static final double shooterKI = 0;
+    public static final double shooterKD = 0;
+    public static final double shooterKS = 0;
+    public static final double shooterKV = 0;
+
+    public static final double hoodKP = 0;
+    public static final double hoodKI = 0;
+    public static final double hoodKD = 0;
+    public static final double hoodKS = 0;
+    public static final double hoodKV = 0;
+
+    public static final double hoodMotionMagicCruiseVelocity = 0;
+    public static final double hoodMotionMagicAcceleration = 0;
+    public static final double hoodMotionMagicJerk = 0;
   }
 }
