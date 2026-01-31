@@ -1,0 +1,58 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
+package frc.robot;
+
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.RobotBase;
+
+/**
+ * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
+ * on a roboRIO. Change the value of "simMode" to switch between "sim" (physics sim) and "replay"
+ * (log replay from a file).
+ */
+public final class Constants {
+  public static final class aimconstants {
+    public static final Translation2d bluegoalpos = new Translation2d(4.6256, 4.0345);
+    public static final Translation2d redgoalpos = new Translation2d(11.915, 4.0345);
+    public static final double fieldmid = 4.0345;
+    public static final double downtrench = 0.66599;
+    public static final double uptrench = 7.40334;
+  }
+
+  public static final Mode simMode = Mode.SIM;
+  public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+
+  public static final class PoseEstimatorConstants {
+    public static final Matrix<N3, N1> stateStdDevs = VecBuilder.fill(0.3, 0.3, 0.1);
+    public static final Matrix<N3, N1> visionStdDevs = VecBuilder.fill(0.9, 0.9, 0.9);
+    public static final InterpolatingDoubleTreeMap tAtoDev = new InterpolatingDoubleTreeMap();
+
+    static {
+      tAtoDev.put(0.17, 0.08);
+      tAtoDev.put(0.12, 0.20);
+      tAtoDev.put(0.071, 0.35);
+      tAtoDev.put(0.046, 0.4);
+    }
+  }
+
+  public static enum Mode {
+    /** Running on a real robot. */
+    REAL,
+
+    /** Running a physics simulator. */
+    SIM,
+
+    /** Replaying from a log file. */
+    REPLAY
+  }
+}
