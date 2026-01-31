@@ -29,6 +29,17 @@ public final class Constants {
     public static final double uptrench = 7.40334;
   }
 
+  public static final class MotorCANIds {
+    public static final String CanBusName = "mainCAN";
+    public static final int shooterMotor1CANId = 1;
+    public static final int shooterMotor2CANId = 2;
+    public static final int shooterMotor3CANId = 3;
+    public static final int beltMotorCANId = 4;
+    public static final int indexerMotorCANId = 5;
+    public static final int intakePivotMotorCANId = 6;
+    public static final int intakeMotorCANId = 7;
+  }
+
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
@@ -54,5 +65,18 @@ public final class Constants {
 
     /** Replaying from a log file. */
     REPLAY
+  }
+
+  public static class FeederSubsystemPID {
+    public static final double indexerKP = 0;
+    public static final double indexerKI = 0;
+    public static final double indexerKD = 0;
+    public static final double indexerKS = 0;
+    public static final double indexerKV = 0;
+    public static final double beltKP = 0;
+    public static final double beltKI = 0;
+    public static final double beltKD = 0;
+    public static final double beltKS = 0;
+    public static final double beltKV = 0;
   }
 }
