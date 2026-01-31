@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -50,7 +51,7 @@ public final class Constants {
   }
 
   public static final class MotorCANIds {
-    public static final String CanBusName = "mainCAN";
+    public static final CANBus kCANBus = new CANBus("mainCAN", "./logs/example.hoot");
     public static final int shooterMotor1CANId = 1;
     public static final int shooterMotor2CANId = 2;
     public static final int shooterMotor3CANId = 3;

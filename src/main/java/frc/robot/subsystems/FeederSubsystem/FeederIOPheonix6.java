@@ -18,9 +18,8 @@ public class FeederIOPheonix6 implements FeederIO {
   private final VelocityVoltage beltVelocityRequest = new VelocityVoltage(0.0);
 
   public FeederIOPheonix6() {
-    CANBus kCANBus = new CANBus(Constants.MotorCANIds.CanBusName);
-    IndexerMotor = new TalonFX(Constants.MotorCANIds.indexerMotorCANId, kCANBus);
-    BeltMotor = new TalonFX(Constants.MotorCANIds.beltMotorCANId, kCANBus);
+    IndexerMotor = new TalonFX(Constants.MotorCANIds.indexerMotorCANId, Constants.MotorCANIds.kCANBus);
+    BeltMotor = new TalonFX(Constants.MotorCANIds.beltMotorCANId, Constants.MotorCANIds.kCANBus);
 
     TalonFXConfiguration indexerConfig =
         new TalonFXConfiguration()

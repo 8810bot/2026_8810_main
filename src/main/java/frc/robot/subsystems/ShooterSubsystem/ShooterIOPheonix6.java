@@ -20,11 +20,10 @@ public class ShooterIOPheonix6 implements ShooterIO {
   private final VoltageOut hoodVoltageRequest = new VoltageOut(0.0);
 
   public ShooterIOPheonix6() {
-    CANBus kCANBus = new CANBus(Constants.MotorCANIds.CanBusName);
-    shooterMotor1 = new TalonFX(Constants.MotorCANIds.shooterMotor1CANId, kCANBus);
-    shooterMotor2 = new TalonFX(Constants.MotorCANIds.shooterMotor2CANId, kCANBus);
-    shooterMotor3 = new TalonFX(Constants.MotorCANIds.shooterMotor3CANId, kCANBus);
-    hoodMotor = new TalonFX(Constants.MotorCANIds.hoodMotorCANId, kCANBus);
+    shooterMotor1 = new TalonFX(Constants.MotorCANIds.shooterMotor1CANId, Constants.MotorCANIds.kCANBus);
+    shooterMotor2 = new TalonFX(Constants.MotorCANIds.shooterMotor2CANId, Constants.MotorCANIds.kCANBus);
+    shooterMotor3 = new TalonFX(Constants.MotorCANIds.shooterMotor3CANId, Constants.MotorCANIds.kCANBus);
+    hoodMotor = new TalonFX(Constants.MotorCANIds.hoodMotorCANId, Constants.MotorCANIds.kCANBus);
 
     TalonFXConfiguration shooterConfig =
         new TalonFXConfiguration()
