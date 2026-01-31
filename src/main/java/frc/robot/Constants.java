@@ -33,6 +33,7 @@ public final class Constants {
   // SOTF Interpolation Tables
   public static final InterpolatingDoubleTreeMap distanceToRps = new InterpolatingDoubleTreeMap();
   public static final InterpolatingDoubleTreeMap distanceToAngle = new InterpolatingDoubleTreeMap();
+  public static final InterpolatingDoubleTreeMap distanceToVelocity = new InterpolatingDoubleTreeMap();
 
   static {
     // Example Data - NEEDS CALIBRATION
@@ -48,6 +49,15 @@ public final class Constants {
     distanceToAngle.put(4.0, 35.0);
     distanceToAngle.put(5.0, 30.0);
     distanceToAngle.put(6.0, 25.0);
+
+    // Example Data - NEEDS CALIBRATION
+    // Mapping Distance to Exit Velocity (m/s)
+    // Approximate values based on typical flywheel physics
+    distanceToVelocity.put(2.0, 15.0);
+    distanceToVelocity.put(3.0, 17.5);
+    distanceToVelocity.put(4.0, 20.0);
+    distanceToVelocity.put(5.0, 22.5);
+    distanceToVelocity.put(6.0, 25.0);
   }
 
   public static final class MotorCANIds {
