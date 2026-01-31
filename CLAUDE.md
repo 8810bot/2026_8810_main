@@ -3,79 +3,43 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 项目概述
-
-这是一个 FRC (FIRST Robotics Competition) 机器人项目，基于 **AdvantageKit** 框架的 Swerve 驱动模板。使用 WPILib 2026 和 Phoenix 6 (CTRE) 硬件。
+这是一个 FRC 2026 赛季机器人项目 (Team 8810)。
+框架: **AdvantageKit** (日志/回放), **WPILib 2026**, **Phoenix 6** (CTRE Swerve), **PathPlanner**.
+硬件: Kraken X60 (驱动/转向), Pigeon 2.0 (陀螺仪), CANcoder, Limelight (视觉).
 
 ## 常用命令
-
-```bash
-# 构建项目
-./gradlew build
-
-# 部署到机器人
-./gradlew deploy
-
-# 运行仿真
-./gradlew simulateJava
-
-# 运行测试
-./gradlew test
-
-# 代码格式化 (自动在编译时执行)
-./gradlew spotlessApply
-
-# 日志回放 (Replay mode)
-./gradlew replayWatch
-```
+- **构建**: `./gradlew build`
+- **部署**: `./gradlew deploy` (需要连接机器人网络)
+- **仿真**: `./gradlew simulateJava` (桌面物理仿真)
+- **测试**: `./gradlew test` (运行 JUnit 测试)
+- **格式化**: `./gradlew spotlessApply` (构建时自动运行，Google Java Format)
+- **回放**: `./gradlew replayWatch` (使用 AdvantageScope 回放日志)
 
 ## 架构设计
+### AdvantageKit IO 模式
+硬件交互通过 IO 接口抽象，以支持真实机器人、仿真和回放模式的无缝切换。
+- **子系统位置**: `src/main/java/frc/robot/subsystems`
+- **逻辑与硬件分离**:
+  - 逻辑在子系统类中 (如 `Drive.java`)。
+  - 硬件输入定义在 `*IO` 接口中 (如 `ModuleIO.java`)。
+  - 具体实现: `*IOTalonFX` (真实), `*IOSim` (仿真), `*IO{}` (回放)。
+- **模式切换**: `Constants.Mode` 决定使用哪种实现 (REAL, SIM, REPLAY)。
 
-### IO 层抽象模式 (AdvantageKit 核心概念)
+### 代码结构
+- `src/main/java/frc/robot`:
+  - `subsystems/`: 机器人子系统 (Drive 等)。
+  - `commands/`: 基于命令的动作定义 (如 `AimandDrive`, `AutonTrench`)。
+  - `generated/`: CTRE Tuner X 生成的文件 (`TunerConstants.java`)，**不要手动修改**。
+  - `util/`: 工具类，包含 `LimelightHelpers` (视觉) 和 `PhoenixUtil`。
+  - `BuildConstants.java`: 自动生成的构建元数据。
 
-项目采用 AdvantageKit 的 IO 层抽象设计，实现硬件与逻辑分离：
+## 编码规范
+- **格式化**: 严格执行 `spotless` 检查。
+- **单位**: 内部计算统一使用 SI 单位 (米, 弧度, 秒)。
+- **日志**: 所有输入必须通过 `Logger.processInputs()` 记录。
+- **硬件配置**: ID 和参数定义在 `TunerConstants.java` 或 `Constants.java`。
 
-- **IO 接口** (`GyroIO`, `ModuleIO`): 定义硬件交互的抽象接口
-- **IO 实现**:
-  - `*IOTalonFX` / `*IOPigeon2`: 真实硬件实现
-  - `*IOSim`: 物理仿真实现
-  - 空实现 `{}`: 用于日志回放模式
-
-### 运行模式 (`Constants.Mode`)
-
-在 `Constants.java` 中通过 `simMode` 切换：
-- `REAL`: 运行在真实机器人 (RoboRIO)
-- `SIM`: 物理仿真模式
-- `REPLAY`: 日志回放模式
-
-### Swerve 驱动系统
-
-```
-Drive (主控制器)
-├── Module[4] (FL, FR, BL, BR)
-│   └── ModuleIO (硬件抽象)
-├── GyroIO (陀螺仪抽象)
-├── PhoenixOdometryThread (高频里程计)
-└── SwerveDrivePoseEstimator (位姿估计)
-```
-
-### 硬件配置
-
-- **TunerConstants.java**: 由 CTRE Tuner X 生成，包含所有 Swerve 模块的电机 ID、编码器偏移、PID 增益等
-- **CAN 总线**: `mainCAN` (支持 CAN FD)
-- **电机**: TalonFX (Kraken X60 FOC)
-- **陀螺仪**: Pigeon 2
-- **编码器**: CANcoder
-
-## 依赖项
-
-- WPILib 2026.1.1
-- AdvantageKit 26.0.0
-- Phoenix 6 (CTRE)
-- PathPlannerLib
-- Studica (NavX 支持)
-
-## 代码规范
-
-- 使用 Spotless + Google Java Format 自动格式化
-- 编译时自动执行 `spotlessApply`
-- Event 分支部署时自动创建 git commit
+## 关键文件
+- `TunerConstants.java`: Swerve 模块配置 (ID, 偏移量, PID)。
+- `RobotContainer.java`: 按钮绑定和自动阶段选择器设置。
+- `Constants.java`: 全局常量和运行模式选择。
