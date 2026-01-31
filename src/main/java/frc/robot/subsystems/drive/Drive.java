@@ -45,12 +45,14 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.Constants.PoseEstimatorConstants;
 import frc.robot.generated.TunerConstants;
+import frc.robot.util.ChassisAccelerations;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.wpilibj.Timer;
 
 public class Drive extends SubsystemBase {
   private static Drive instance;
@@ -102,6 +104,10 @@ public class Drive extends SubsystemBase {
       };
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
+
+  private ChassisSpeeds lastSpeeds = new ChassisSpeeds();
+  private double lastTime = 0.0;
+  private ChassisAccelerations fieldRelAccel = new ChassisAccelerations(0, 0, 0);
 
   public Drive(
       GyroIO gyroIO,
@@ -215,6 +221,18 @@ public class Drive extends SubsystemBase {
     updateVision();
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+
+    // Calculate acceleration
+    double currentTime = Timer.getFPGATimestamp();
+    double dt = currentTime - lastTime;
+    ChassisSpeeds currentSpeeds = getFieldRelativeSpeeds();
+
+    if (dt > 0) {
+      fieldRelAccel = new ChassisAccelerations(currentSpeeds, lastSpeeds, dt);
+    }
+
+    lastSpeeds = currentSpeeds;
+    lastTime = currentTime;
 
     SmartDashboard.putNumber("X", this.getPose().getX());
   }
@@ -348,8 +366,18 @@ public class Drive extends SubsystemBase {
 
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  private ChassisSpeeds getChassisSpeeds() {
+  public ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  /** Returns the field-relative chassis speeds of the robot. */
+  public ChassisSpeeds getFieldRelativeSpeeds() {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getRotation());
+  }
+
+  /** Returns the field-relative acceleration of the robot. */
+  public ChassisAccelerations getFieldRelativeAccelerations() {
+    return fieldRelAccel;
   }
 
   /** Returns the position of each module in radians. */

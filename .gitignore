@@ -189,3 +189,4 @@ src/main/java/frc/robot/BuildConstants.java
 # AI Assistance Documentation
 CLAUDE.md
 GEMINI.md
+.claude/settings.local.json

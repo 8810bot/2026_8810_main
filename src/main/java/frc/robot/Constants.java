@@ -29,6 +29,26 @@ public final class Constants {
     public static final double uptrench = 7.40334;
   }
 
+  // SOTF Interpolation Tables
+  public static final InterpolatingDoubleTreeMap distanceToRps = new InterpolatingDoubleTreeMap();
+  public static final InterpolatingDoubleTreeMap distanceToAngle = new InterpolatingDoubleTreeMap();
+
+  static {
+    // Example Data - NEEDS CALIBRATION
+    distanceToRps.put(2.0, 3000.0);
+    distanceToRps.put(3.0, 3500.0);
+    distanceToRps.put(4.0, 4000.0);
+    distanceToRps.put(5.0, 4500.0);
+    distanceToRps.put(6.0, 5000.0);
+
+    // Example Data - NEEDS CALIBRATION
+    distanceToAngle.put(2.0, 45.0);
+    distanceToAngle.put(3.0, 40.0);
+    distanceToAngle.put(4.0, 35.0);
+    distanceToAngle.put(5.0, 30.0);
+    distanceToAngle.put(6.0, 25.0);
+  }
+
   public static final class MotorCANIds {
     public static final String CanBusName = "mainCAN";
     public static final int shooterMotor1CANId = 1;
