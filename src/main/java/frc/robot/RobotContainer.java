@@ -19,18 +19,17 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.AimandDrive;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
+import frc.robot.subsystems.ShotCalculator;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
-import frc.robot.subsystems.ShotCalculator;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -203,28 +202,34 @@ public class RobotContainer {
         .onTrue(DriveCommands.rotateByAngle(drive, Rotation2d.fromDegrees(-45)));
 
     // Shoot On The Fly Command (Right Trigger)
-    controller.rightTrigger().whileTrue(
-        Commands.run(() -> {
-            // 1. Drive with auto-aim
-            double rotOutput = controller.getRightX(); // Manual rotation override if needed, or implement PID here
-            // For now, let's just use the calculator's yaw
-            // In a real implementation, you'd use a PIDController to turn to this yaw
+    controller
+        .rightTrigger()
+        .whileTrue(
+            Commands.run(
+                () -> {
+                  // 1. Drive with auto-aim
+                  double rotOutput =
+                      controller
+                          .getRightX(); // Manual rotation override if needed, or implement PID here
+                  // For now, let's just use the calculator's yaw
+                  // In a real implementation, you'd use a PIDController to turn to this yaw
 
-            drive.runVelocity(
-                ChassisSpeeds.fromFieldRelativeSpeeds(
-                    -controller.getLeftY() * drive.getMaxLinearSpeedMetersPerSec(),
-                    -controller.getLeftX() * drive.getMaxLinearSpeedMetersPerSec(),
-                    // Simple P controller for rotation (placeholder)
-                    (shotCalculator.getEffectiveYaw() - drive.getRotation().getRadians()) * 4.0,
-                    drive.getRotation()
-                )
-            );
+                  drive.runVelocity(
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          -controller.getLeftY() * drive.getMaxLinearSpeedMetersPerSec(),
+                          -controller.getLeftX() * drive.getMaxLinearSpeedMetersPerSec(),
+                          // Simple P controller for rotation (placeholder)
+                          (shotCalculator.getEffectiveYaw() - drive.getRotation().getRadians())
+                              * 4.0,
+                          drive.getRotation()));
 
-            // 2. Set Shooter
-            shooter.setShooterRps(shotCalculator.getShooterRps());
-            shooter.setHoodAngle(shotCalculator.getHoodAngle());
-        }, drive, shooter, shotCalculator)
-    );
+                  // 2. Set Shooter
+                  shooter.setShooterRps(shotCalculator.getShooterRps());
+                  shooter.setHoodAngle(shotCalculator.getHoodAngle());
+                },
+                drive,
+                shooter,
+                shotCalculator));
 
     controller.rightStick().whileTrue(new AutonTrench(drive, () -> controller.getLeftY()));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)

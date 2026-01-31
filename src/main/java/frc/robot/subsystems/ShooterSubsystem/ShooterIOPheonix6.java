@@ -1,6 +1,5 @@
 package frc.robot.subsystems.ShooterSubsystem;
 
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -20,9 +19,12 @@ public class ShooterIOPheonix6 implements ShooterIO {
   private final VoltageOut hoodVoltageRequest = new VoltageOut(0.0);
 
   public ShooterIOPheonix6() {
-    shooterMotor1 = new TalonFX(Constants.MotorCANIds.shooterMotor1CANId, Constants.MotorCANIds.kCANBus);
-    shooterMotor2 = new TalonFX(Constants.MotorCANIds.shooterMotor2CANId, Constants.MotorCANIds.kCANBus);
-    shooterMotor3 = new TalonFX(Constants.MotorCANIds.shooterMotor3CANId, Constants.MotorCANIds.kCANBus);
+    shooterMotor1 =
+        new TalonFX(Constants.MotorCANIds.shooterMotor1CANId, Constants.MotorCANIds.kCANBus);
+    shooterMotor2 =
+        new TalonFX(Constants.MotorCANIds.shooterMotor2CANId, Constants.MotorCANIds.kCANBus);
+    shooterMotor3 =
+        new TalonFX(Constants.MotorCANIds.shooterMotor3CANId, Constants.MotorCANIds.kCANBus);
     hoodMotor = new TalonFX(Constants.MotorCANIds.hoodMotorCANId, Constants.MotorCANIds.kCANBus);
 
     TalonFXConfiguration shooterConfig =

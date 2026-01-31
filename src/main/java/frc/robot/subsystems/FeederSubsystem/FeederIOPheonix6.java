@@ -1,6 +1,5 @@
 package frc.robot.subsystems.FeederSubsystem;
 
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -18,7 +17,8 @@ public class FeederIOPheonix6 implements FeederIO {
   private final VelocityVoltage beltVelocityRequest = new VelocityVoltage(0.0);
 
   public FeederIOPheonix6() {
-    IndexerMotor = new TalonFX(Constants.MotorCANIds.indexerMotorCANId, Constants.MotorCANIds.kCANBus);
+    IndexerMotor =
+        new TalonFX(Constants.MotorCANIds.indexerMotorCANId, Constants.MotorCANIds.kCANBus);
     BeltMotor = new TalonFX(Constants.MotorCANIds.beltMotorCANId, Constants.MotorCANIds.kCANBus);
 
     TalonFXConfiguration indexerConfig =
