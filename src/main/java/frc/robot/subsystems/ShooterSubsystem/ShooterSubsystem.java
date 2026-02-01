@@ -21,6 +21,7 @@ public class ShooterSubsystem extends SubsystemBase {
     } else {
       io = new ShooterIO() {};
     }
+    io.HoodSetZero();
   }
 
   public void setShooterRps(double rps) {
@@ -32,7 +33,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setHoodAngle(double angle) {
-    io.HoodSetAngle(angle);
+    io.HoodSetAngle(angle / 360);
   }
 
   public void setHoodZero() {

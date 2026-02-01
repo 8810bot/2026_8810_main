@@ -23,12 +23,15 @@ import frc.robot.commands.AimandDrive;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
+import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -43,10 +46,13 @@ public class RobotContainer {
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
+  public final LoggedTunableNumber ShooterTestRPS = new LoggedTunableNumber("SHooterRPS", 60);
+  public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("HoodAngle", 10);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
-
+  public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  public FeederSubsystem feederSubsystem = new FeederSubsystem();
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
@@ -158,16 +164,21 @@ public class RobotContainer {
 
     // Lock to 0° when A button is held
     controller
-        .a()
+        .rightBumper()
         .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero));
-
+            new InstantCommand(
+                () -> {
+                  shooterSubsystem.setShooterRps(ShooterTestRPS.get());
+                  shooterSubsystem.setHoodAngle(HoodAngle.get());
+                }))
+        .onFalse(new InstantCommand(() -> shooterSubsystem.setShooterVoltage(0)));
+    controller
+        .leftBumper()
+        .whileTrue(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(4)))
+        .onFalse(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(0)));
     // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    controller.x().onTrue(new InstantCommand(() -> shooterSubsystem.setHoodZero()));
     controller
         .povUp()
         .whileTrue(
@@ -184,22 +195,13 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // Y button: Rotate to 90 degrees
-    controller.y().onTrue(DriveCommands.rotateToAngle(drive, Rotation2d.fromDegrees(90)));
-
-    // Left bumper: Rotate counter-clockwise 45 degrees
-    controller.leftBumper().onTrue(DriveCommands.rotateByAngle(drive, Rotation2d.fromDegrees(45)));
-
-    // Right bumper: Rotate clockwise 45 degrees
-    controller
-        .rightBumper()
-        .onTrue(DriveCommands.rotateByAngle(drive, Rotation2d.fromDegrees(-45)));
-
     controller
         .leftTrigger()
         .whileTrue(
             new AimandDrive(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
-    controller.rightStick().whileTrue(new AutonTrench(drive, () -> controller.getLeftY()));
+    controller
+        .rightStick()
+        .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller

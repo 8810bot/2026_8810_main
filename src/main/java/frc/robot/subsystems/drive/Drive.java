@@ -217,6 +217,22 @@ public class Drive extends SubsystemBase {
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
 
     SmartDashboard.putNumber("X", this.getPose().getX());
+
+    // distance from goal
+    Pose2d pose = this.getPose();
+    double robotX = pose.getX();
+    double robotY = pose.getY();
+    double robotYaw = pose.getRotation().getRadians(); // radians
+    double dx, dy = 0;
+    // Vector from robot to goal
+    if (DriverStation.getAlliance().get() == Alliance.Blue) {
+      dx = Constants.aimconstants.bluegoalpos.getX() - robotX;
+      dy = Constants.aimconstants.bluegoalpos.getY() - robotY;
+    } else {
+      dx = Constants.aimconstants.redgoalpos.getX() - robotX;
+      dy = Constants.aimconstants.redgoalpos.getY() - robotY;
+    }
+    Logger.recordOutput("Drive/dist_from_goal", Math.hypot(dx, dy));
   }
 
   public void updateVision() {

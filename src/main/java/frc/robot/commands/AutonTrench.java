@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
+import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.util8810;
 import java.util.function.DoubleSupplier;
@@ -18,9 +19,12 @@ public class AutonTrench extends Command {
   PIDController yPidController = new PIDController(5.0, 0, 0);
   private double y_target;
   private double rot_target;
+  private ShooterSubsystem shooterSubsystem;
 
-  public AutonTrench(Drive m_drive, DoubleSupplier i_xSupplier) {
+  public AutonTrench(
+      Drive m_drive, ShooterSubsystem m_shooterSubsystem, DoubleSupplier i_xSupplier) {
     drive = m_drive;
+    shooterSubsystem = m_shooterSubsystem;
     addRequirements(drive);
     xSupplier = i_xSupplier;
     yPidController.setTolerance(0.1);
@@ -45,6 +49,7 @@ public class AutonTrench extends Command {
     } else {
       rot_target = Math.PI;
     }
+    shooterSubsystem.setHoodAngle(1);
   }
 
   @Override

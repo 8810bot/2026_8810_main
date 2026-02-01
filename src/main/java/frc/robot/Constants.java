@@ -31,14 +31,14 @@ public final class Constants {
 
   public static final class MotorCANIds {
     public static final String CanBusName = "mainCAN";
-    public static final int shooterMotor1CANId = 1;
-    public static final int shooterMotor2CANId = 2;
-    public static final int shooterMotor3CANId = 3;
-    public static final int hoodMotorCANId = 8;
-    public static final int beltMotorCANId = 4;
-    public static final int indexerMotorCANId = 5;
-    public static final int intakePivotMotorCANId = 6;
-    public static final int intakeMotorCANId = 7;
+    public static final int shooterMotor1CANId = 50;
+    public static final int shooterMotor2CANId = 51;
+    public static final int shooterMotor3CANId = 52;
+    public static final int hoodMotorCANId = 53;
+    public static final int beltMotorCANId = 71;
+    public static final int indexerMotorCANId = 40;
+    public static final int intakePivotMotorCANId = 70;
+    public static final int intakeMotorCANId = 69;
   }
 
   public static final Mode simMode = Mode.SIM;
@@ -82,20 +82,20 @@ public final class Constants {
   }
 
   public static class ShooterSubsystemPID {
-    public static final double shooterKP = 0;
+    public static final double shooterKP = 6;
     public static final double shooterKI = 0;
-    public static final double shooterKD = 0;
+    public static final double shooterKD = 0.1;
     public static final double shooterKS = 0;
     public static final double shooterKV = 0;
-
-    public static final double hoodKP = 0;
+    public static final double hoodGearRatio = 8. * 13.;
+    public static final double hoodKP = 1000;
     public static final double hoodKI = 0;
-    public static final double hoodKD = 0;
+    public static final double hoodKD = 200;
     public static final double hoodKS = 0;
     public static final double hoodKV = 0;
 
-    public static final double hoodMotionMagicCruiseVelocity = 0;
-    public static final double hoodMotionMagicAcceleration = 0;
+    public static final double hoodMotionMagicCruiseVelocity = 0.5;
+    public static final double hoodMotionMagicAcceleration = 4;
     public static final double hoodMotionMagicJerk = 0;
   }
 }
