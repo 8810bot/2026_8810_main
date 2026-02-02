@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -28,49 +27,66 @@ public final class Constants {
     public static final double fieldmid = 4.0345;
     public static final double downtrench = 0.66599;
     public static final double uptrench = 7.40334;
+
+    public static InterpolatingDoubleTreeMap distanceToShooterRPS =
+        new InterpolatingDoubleTreeMap();
+    public static InterpolatingDoubleTreeMap distanceToHoodAngle = new InterpolatingDoubleTreeMap();
+
+    static {
+      distanceToShooterRPS.put(0.834, 50.0);
+      distanceToShooterRPS.put(1.318, 50.0);
+      distanceToShooterRPS.put(1.877, 53.0);
+      distanceToShooterRPS.put(2.384, 55.0);
+      distanceToShooterRPS.put(2.873, 57.0);
+      distanceToShooterRPS.put(3.305, 58.0);
+      distanceToShooterRPS.put(3.853, 59.0);
+      distanceToShooterRPS.put(4.365, 61.0);
+      distanceToShooterRPS.put(4.866, 63.0);
+
+      distanceToHoodAngle.put(0.834, 0.0);
+      distanceToHoodAngle.put(1.318, 4.0);
+      distanceToHoodAngle.put(1.877, 7.0);
+      distanceToHoodAngle.put(2.384, 10.0);
+      distanceToHoodAngle.put(2.873, 11.0);
+      distanceToHoodAngle.put(3.305, 13.0);
+      distanceToHoodAngle.put(3.853, 17.0);
+      distanceToHoodAngle.put(4.365, 21.0);
+      distanceToHoodAngle.put(4.866, 23.0);
+    }
   }
 
-  // SOTF Interpolation Tables
-  public static final InterpolatingDoubleTreeMap distanceToRps = new InterpolatingDoubleTreeMap();
-  public static final InterpolatingDoubleTreeMap distanceToAngle = new InterpolatingDoubleTreeMap();
+  // SOTF Compatibility Layer - Aliases for backward compatibility with ShotCalculator
+  // Provides access to calibrated data from aimconstants using legacy variable names
+  public static final InterpolatingDoubleTreeMap distanceToRps = aimconstants.distanceToShooterRPS;
+  public static final InterpolatingDoubleTreeMap distanceToAngle = aimconstants.distanceToHoodAngle;
   public static final InterpolatingDoubleTreeMap distanceToVelocity =
       new InterpolatingDoubleTreeMap();
 
   static {
-    // Example Data - NEEDS CALIBRATION
-    distanceToRps.put(2.0, 3000.0);
-    distanceToRps.put(3.0, 3500.0);
-    distanceToRps.put(4.0, 4000.0);
-    distanceToRps.put(5.0, 4500.0);
-    distanceToRps.put(6.0, 5000.0);
+    // Calculate ball exit velocity from shooter RPS
+    // Formula: velocity (m/s) = RPS * wheel_diameter * pi * efficiency
+    // Assuming 4" (0.1016m) wheel diameter and 0.8 efficiency factor
+    final double wheelDiameter = 0.1016; // meters
+    final double efficiency = 0.8;
 
-    // Example Data - NEEDS CALIBRATION
-    distanceToAngle.put(2.0, 45.0);
-    distanceToAngle.put(3.0, 40.0);
-    distanceToAngle.put(4.0, 35.0);
-    distanceToAngle.put(5.0, 30.0);
-    distanceToAngle.put(6.0, 25.0);
-
-    // Example Data - NEEDS CALIBRATION
-    // Mapping Distance to Exit Velocity (m/s)
-    // Approximate values based on typical flywheel physics
-    distanceToVelocity.put(2.0, 15.0);
-    distanceToVelocity.put(3.0, 17.5);
-    distanceToVelocity.put(4.0, 20.0);
-    distanceToVelocity.put(5.0, 22.5);
-    distanceToVelocity.put(6.0, 25.0);
+    for (var entry : aimconstants.distanceToShooterRPS.entrySet()) {
+      double distance = entry.getKey();
+      double rps = entry.getValue();
+      double velocity = rps * wheelDiameter * Math.PI * efficiency;
+      distanceToVelocity.put(distance, velocity);
+    }
   }
 
   public static final class MotorCANIds {
-    public static final CANBus kCANBus = new CANBus("mainCAN", "./logs/example.hoot");
-    public static final int shooterMotor1CANId = 1;
-    public static final int shooterMotor2CANId = 2;
-    public static final int shooterMotor3CANId = 3;
-    public static final int hoodMotorCANId = 8;
-    public static final int beltMotorCANId = 4;
-    public static final int indexerMotorCANId = 5;
-    public static final int intakePivotMotorCANId = 6;
-    public static final int intakeMotorCANId = 7;
+    public static final String CanBusName = "mainCAN";
+    public static final int shooterMotor1CANId = 50;
+    public static final int shooterMotor2CANId = 51;
+    public static final int shooterMotor3CANId = 52;
+    public static final int hoodMotorCANId = 53;
+    public static final int beltMotorCANId = 71;
+    public static final int indexerMotorCANId = 40;
+    public static final int intakePivotMotorCANId = 70;
+    public static final int intakeMotorCANId = 69;
   }
 
   public static final Mode simMode = Mode.SIM;
@@ -114,20 +130,20 @@ public final class Constants {
   }
 
   public static class ShooterSubsystemPID {
-    public static final double shooterKP = 0;
+    public static final double shooterKP = 6;
     public static final double shooterKI = 0;
-    public static final double shooterKD = 0;
+    public static final double shooterKD = 0.1;
     public static final double shooterKS = 0;
     public static final double shooterKV = 0;
-
-    public static final double hoodKP = 0;
+    public static final double hoodGearRatio = 8. * 13.;
+    public static final double hoodKP = 1000;
     public static final double hoodKI = 0;
-    public static final double hoodKD = 0;
+    public static final double hoodKD = 200;
     public static final double hoodKS = 0;
     public static final double hoodKV = 0;
 
-    public static final double hoodMotionMagicCruiseVelocity = 0;
-    public static final double hoodMotionMagicAcceleration = 0;
+    public static final double hoodMotionMagicCruiseVelocity = 0.5;
+    public static final double hoodMotionMagicAcceleration = 4;
     public static final double hoodMotionMagicJerk = 0;
   }
 }
