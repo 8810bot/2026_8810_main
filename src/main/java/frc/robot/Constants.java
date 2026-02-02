@@ -69,16 +69,24 @@ public final class Constants {
     final double wheelDiameter = 0.1016; // meters
     final double efficiency = 0.8;
 
-    for (var entry : aimconstants.distanceToShooterRPS.entrySet()) {
-      double distance = entry.getKey();
-      double rps = entry.getValue();
-      double velocity = rps * wheelDiameter * Math.PI * efficiency;
-      distanceToVelocity.put(distance, velocity);
-    }
+    // Manually populate distanceToVelocity based on distanceToShooterRPS data
+    distanceToVelocity.put(0.834, 50.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(1.318, 50.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(1.877, 53.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(2.384, 55.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(2.873, 57.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(3.305, 58.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(3.853, 59.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(4.365, 61.0 * wheelDiameter * Math.PI * efficiency);
+    distanceToVelocity.put(4.866, 63.0 * wheelDiameter * Math.PI * efficiency);
   }
 
   public static final class MotorCANIds {
     public static final String CanBusName = "mainCAN";
+
+    // Backward compatibility: kCANBus for existing Phoenix6 IO implementations
+    public static final String kCANBus = CanBusName;
+
     public static final int shooterMotor1CANId = 50;
     public static final int shooterMotor2CANId = 51;
     public static final int shooterMotor3CANId = 52;
