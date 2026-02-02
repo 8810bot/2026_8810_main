@@ -2,11 +2,20 @@ package frc.robot.subsystems.FeederSubsystem;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public class FeederIOSim implements FeederIO {
-  private final DCMotorSim beltSim = new DCMotorSim(DCMotor.getKrakenX60(1), 1.0, 0.01);
-  private final DCMotorSim indexerSim = new DCMotorSim(DCMotor.getKrakenX60(1), 1.0, 0.01);
+  private final DCMotorSim beltSim =
+      new DCMotorSim(
+          LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60(1), 0.01, 1.0),
+          DCMotor.getKrakenX60(1),
+          1.0);
+  private final DCMotorSim indexerSim =
+      new DCMotorSim(
+          LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60(1), 0.01, 1.0),
+          DCMotor.getKrakenX60(1),
+          1.0);
 
   private final PIDController beltController = new PIDController(0.1, 0.0, 0.0);
   private final PIDController indexerController = new PIDController(0.1, 0.0, 0.0);

@@ -33,7 +33,8 @@ public final class Constants {
   // SOTF Interpolation Tables
   public static final InterpolatingDoubleTreeMap distanceToRps = new InterpolatingDoubleTreeMap();
   public static final InterpolatingDoubleTreeMap distanceToAngle = new InterpolatingDoubleTreeMap();
-  public static final InterpolatingDoubleTreeMap distanceToVelocity = new InterpolatingDoubleTreeMap();
+  public static final InterpolatingDoubleTreeMap distanceToVelocity =
+      new InterpolatingDoubleTreeMap();
 
   static {
     // Example Data - NEEDS CALIBRATION
