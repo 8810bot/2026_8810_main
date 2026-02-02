@@ -8,6 +8,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -30,7 +31,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -46,6 +49,16 @@ public class RobotContainer {
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
+
+  // SOTF Auto-Aim PID Controller
+  private final PIDController sotfRotationPID;
+
+  // SOTF Tunable Parameters (AdvantageKit Tuning Mode)
+  // These are published to /Tuning table and can be edited in AdvantageScope
+  private final LoggedNetworkNumber sotfKP;
+  private final LoggedNetworkNumber sotfKI;
+  private final LoggedNetworkNumber sotfKD;
+  private final LoggedNetworkNumber sotfSpeedMultiplier;
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -109,6 +122,18 @@ public class RobotContainer {
 
     // Initialize auxiliary subsystems
     shotCalculator = new ShotCalculator(drive);
+
+    // Initialize SOTF Tunable Parameters (AdvantageKit Tuning Mode)
+    // These are published to /Tuning table and automatically logged
+    sotfKP = new LoggedNetworkNumber("/Tuning/SOTF/kP", 4.0);
+    sotfKI = new LoggedNetworkNumber("/Tuning/SOTF/kI", 0.0);
+    sotfKD = new LoggedNetworkNumber("/Tuning/SOTF/kD", 0.0);
+    sotfSpeedMultiplier = new LoggedNetworkNumber("/Tuning/SOTF/SpeedMultiplier", 0.6);
+
+    // Initialize SOTF Auto-Aim PID Controller
+    sotfRotationPID = new PIDController(sotfKP.get(), sotfKI.get(), sotfKD.get());
+    sotfRotationPID.enableContinuousInput(-Math.PI, Math.PI); // Enable angle wrapping
+    sotfRotationPID.setTolerance(Math.toRadians(2.0)); // ±2° tolerance
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -206,30 +231,51 @@ public class RobotContainer {
         .rightTrigger()
         .whileTrue(
             Commands.run(
-                () -> {
-                  // 1. Drive with auto-aim
-                  double rotOutput =
-                      controller
-                          .getRightX(); // Manual rotation override if needed, or implement PID here
-                  // For now, let's just use the calculator's yaw
-                  // In a real implementation, you'd use a PIDController to turn to this yaw
+                    () -> {
+                      // 1. Update PID gains from tunable parameters (AdvantageKit Tuning Mode)
+                      double kP = sotfKP.get();
+                      double kI = sotfKI.get();
+                      double kD = sotfKD.get();
+                      if (sotfRotationPID.getP() != kP
+                          || sotfRotationPID.getI() != kI
+                          || sotfRotationPID.getD() != kD) {
+                        sotfRotationPID.setPID(kP, kI, kD);
+                      }
 
-                  drive.runVelocity(
-                      ChassisSpeeds.fromFieldRelativeSpeeds(
-                          -controller.getLeftY() * drive.getMaxLinearSpeedMetersPerSec(),
-                          -controller.getLeftX() * drive.getMaxLinearSpeedMetersPerSec(),
-                          // Simple P controller for rotation (placeholder)
-                          (shotCalculator.getEffectiveYaw() - drive.getRotation().getRadians())
-                              * 4.0,
-                          drive.getRotation()));
+                      // 2. Calculate rotation speed using PID controller
+                      double currentYaw = drive.getRotation().getRadians();
+                      double targetYaw = shotCalculator.getEffectiveYaw();
+                      double rotationSpeed = sotfRotationPID.calculate(currentYaw, targetYaw);
 
-                  // 2. Set Shooter
-                  shooter.setShooterRps(shotCalculator.getShooterRps());
-                  shooter.setHoodAngle(shotCalculator.getHoodAngle());
-                },
-                drive,
-                shooter,
-                shotCalculator));
+                      // 3. Get speed multiplier from tunable parameter
+                      double speedMultiplier = sotfSpeedMultiplier.get();
+
+                      // 4. Drive with auto-aim (reduced translation speed + PID-controlled
+                      // rotation)
+                      double maxSpeed = drive.getMaxLinearSpeedMetersPerSec();
+                      drive.runVelocity(
+                          ChassisSpeeds.fromFieldRelativeSpeeds(
+                              -controller.getLeftY() * maxSpeed * speedMultiplier, // Reduced X
+                              -controller.getLeftX() * maxSpeed * speedMultiplier, // Reduced Y
+                              rotationSpeed, // PID-controlled rotation
+                              drive.getRotation()));
+
+                      // 5. Set Shooter parameters
+                      shooter.setShooterRps(shotCalculator.getShooterRps());
+                      shooter.setHoodAngle(shotCalculator.getHoodAngle());
+
+                      // 6. Log PID performance for tuning analysis
+                      Logger.recordOutput("SOTF/PID/CurrentYaw", currentYaw);
+                      Logger.recordOutput("SOTF/PID/TargetYaw", targetYaw);
+                      Logger.recordOutput("SOTF/PID/Error", targetYaw - currentYaw);
+                      Logger.recordOutput("SOTF/PID/Output", rotationSpeed);
+                      Logger.recordOutput("SOTF/PID/AtSetpoint", sotfRotationPID.atSetpoint());
+                    },
+                    drive,
+                    shooter,
+                    shotCalculator)
+                .beforeStarting(() -> sotfRotationPID.reset()) // Reset integrator on start
+            );
 
     controller.rightStick().whileTrue(new AutonTrench(drive, () -> controller.getLeftY()));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
