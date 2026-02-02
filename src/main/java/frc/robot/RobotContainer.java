@@ -11,6 +11,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -252,13 +253,26 @@ public class RobotContainer {
 
                       // 4. Drive with auto-aim (reduced translation speed + PID-controlled
                       // rotation)
+                      // 4. Drive with auto-aim (reduced translation speed + PID-controlled
+                      // rotation)
+                      // Invert X and Y to match normal drive mode behavior
                       double maxSpeed = drive.getMaxLinearSpeedMetersPerSec();
+
+                      // Get linear velocity (with deadband and squaring)
+                      Translation2d linearVelocity =
+                          DriveCommands.getLinearVelocityFromJoysticks(
+                              -controller.getLeftY(), -controller.getLeftX());
+
+                      // Construct ChassisSpeeds with inverted X and Y to match normal mode
+                      ChassisSpeeds speeds =
+                          new ChassisSpeeds(
+                              -linearVelocity.getX() * maxSpeed * speedMultiplier, // Inverted
+                              -linearVelocity.getY() * maxSpeed * speedMultiplier, // Inverted
+                              rotationSpeed); // PID-controlled rotation
+
+                      // Convert to field-relative
                       drive.runVelocity(
-                          ChassisSpeeds.fromFieldRelativeSpeeds(
-                              -controller.getLeftY() * maxSpeed * speedMultiplier, // Reduced X
-                              -controller.getLeftX() * maxSpeed * speedMultiplier, // Reduced Y
-                              rotationSpeed, // PID-controlled rotation
-                              drive.getRotation()));
+                          ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getRotation()));
 
                       // 5. Set Shooter parameters
                       shooter.setShooterRps(shotCalculator.getShooterRps());

@@ -17,6 +17,7 @@ public interface ShooterIO {
   public class ShooterIOInputs {
     public double ShooterRPS = 0;
     public double ShooterCurrentAMPS = 0;
+    public double ShooterAppliedVoltsV = 0;
     public double HoodAngle = 0;
     public double HoodVoltageV = 0;
     public double HoodCurrentAMPS = 0;

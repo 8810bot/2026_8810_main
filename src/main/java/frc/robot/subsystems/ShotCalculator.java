@@ -85,11 +85,23 @@ public class ShotCalculator extends SubsystemBase {
     double targetVelocity = Constants.distanceToVelocity.get(virtualDist);
 
     // Logging
+    Logger.recordOutput("ShotCalculator/RealTarget", realTarget);
     Logger.recordOutput("ShotCalculator/EffectiveTarget", effectiveTarget);
     Logger.recordOutput("ShotCalculator/EffectiveYaw", effectiveYaw);
+    Logger.recordOutput("ShotCalculator/RealDistance", dist);
     Logger.recordOutput("ShotCalculator/VirtualDistance", virtualDist);
+    Logger.recordOutput("ShotCalculator/FlightTime", solution.flightTimeSeconds());
+    Logger.recordOutput(
+        "ShotCalculator/RobotVelocity",
+        Math.hypot(robotVel.vxMetersPerSecond, robotVel.vyMetersPerSecond));
+    Logger.recordOutput(
+        "ShotCalculator/VirtualOffset",
+        new Translation2d(
+            effectiveTarget.getX() - realTarget.getX(),
+            effectiveTarget.getY() - realTarget.getY()));
     Logger.recordOutput("ShotCalculator/ShooterRPS", shooterRps);
     Logger.recordOutput("ShotCalculator/HoodAngle", hoodAngle);
+    Logger.recordOutput("ShotCalculator/EstimatedBallSpeed", estimatedBallSpeed);
 
     // Trajectory Visualization
     // Lift robot pose to shooter height (approx 0.5m)
