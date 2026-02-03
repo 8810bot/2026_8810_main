@@ -69,6 +69,10 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.processInputs("Shooter", inputs);
   }
 
+  public boolean isAtSetSpeed(double targetRPS) {
+    return Math.abs(inputs.ShooterRPS - targetRPS) < 1.0;
+  }
+
   public void processDashboard() {
     SmartDashboard.putNumber("Shooter/RPS", inputs.ShooterRPS);
     SmartDashboard.putNumber("Shooter/CurrentAMPS", inputs.ShooterCurrentAMPS);

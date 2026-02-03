@@ -1,6 +1,5 @@
 package frc.robot.subsystems.FeederSubsystem;
 
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -22,29 +21,25 @@ public class FeederIOPheonix6 implements FeederIO {
         new TalonFX(Constants.MotorCANIds.indexerMotorCANId, Constants.MotorCANIds.CanBusName);
     BeltMotor = new TalonFX(Constants.MotorCANIds.beltMotorCANId, Constants.MotorCANIds.CanBusName);
 
-    TalonFXConfiguration indexerConfig =
-        new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
-            .withSlot0(
-                new Slot0Configs()
-                    .withKP(Constants.FeederSubsystemPID.indexerKP)
-                    .withKI(Constants.FeederSubsystemPID.indexerKI)
-                    .withKD(Constants.FeederSubsystemPID.indexerKD)
-                    .withKS(Constants.FeederSubsystemPID.indexerKS)
-                    .withKV(Constants.FeederSubsystemPID.indexerKV));
+    TalonFXConfiguration indexerConfig = new TalonFXConfiguration();
+    indexerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    indexerConfig.Slot0 = new Slot0Configs();
+    indexerConfig.Slot0.kP = Constants.FeederSubsystemPID.indexerKP;
+    indexerConfig.Slot0.kI = Constants.FeederSubsystemPID.indexerKI;
+    indexerConfig.Slot0.kD = Constants.FeederSubsystemPID.indexerKD;
+    indexerConfig.Slot0.kS = Constants.FeederSubsystemPID.indexerKS;
+    indexerConfig.Slot0.kV = Constants.FeederSubsystemPID.indexerKV;
     indexerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     IndexerMotor.getConfigurator().apply(indexerConfig);
 
-    TalonFXConfiguration beltConfig =
-        new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
-            .withSlot0(
-                new Slot0Configs()
-                    .withKP(Constants.FeederSubsystemPID.beltKP)
-                    .withKI(Constants.FeederSubsystemPID.beltKI)
-                    .withKD(Constants.FeederSubsystemPID.beltKD)
-                    .withKS(Constants.FeederSubsystemPID.beltKS)
-                    .withKV(Constants.FeederSubsystemPID.beltKV));
+    TalonFXConfiguration beltConfig = new TalonFXConfiguration();
+    beltConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    beltConfig.Slot0 = new Slot0Configs();
+    beltConfig.Slot0.kP = Constants.FeederSubsystemPID.beltKP;
+    beltConfig.Slot0.kI = Constants.FeederSubsystemPID.beltKI;
+    beltConfig.Slot0.kD = Constants.FeederSubsystemPID.beltKD;
+    beltConfig.Slot0.kS = Constants.FeederSubsystemPID.beltKS;
+    beltConfig.Slot0.kV = Constants.FeederSubsystemPID.beltKV;
     BeltMotor.getConfigurator().apply(beltConfig);
   }
 

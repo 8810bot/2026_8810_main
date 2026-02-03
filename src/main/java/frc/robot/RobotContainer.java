@@ -8,6 +8,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -20,10 +22,12 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.AimandDrive;
+import frc.robot.commands.Aimbot;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
+import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -44,6 +48,8 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
 
+  // path planner
+
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
   public final LoggedTunableNumber ShooterTestRPS = new LoggedTunableNumber("SHooterRPS", 60);
@@ -53,7 +59,9 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   public FeederSubsystem feederSubsystem = new FeederSubsystem();
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  public IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  /** The container for the robot. Contains subsystems, OI devices, a
+   * nd commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
@@ -110,6 +118,9 @@ public class RobotContainer {
         break;
     }
 
+    NamedCommands.registerCommand(
+        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem));
+
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -142,6 +153,7 @@ public class RobotContainer {
     autoChooser.addOption(
         "Rotate FL Module to 90 Degrees",
         DriveCommands.rotateModuleToAngle(drive, 0, Rotation2d.fromDegrees(90)));
+    autoChooser.addDefaultOption("default", new PathPlannerAuto("New Auto"));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -165,24 +177,25 @@ public class RobotContainer {
     // Lock to 0° when A button is held
     controller
         .rightBumper()
-        .whileTrue(
-            new InstantCommand(
-                () -> {
-                  shooterSubsystem.setShooterRps(ShooterTestRPS.get());
-                  shooterSubsystem.setHoodAngle(HoodAngle.get());
-                }))
-        .onFalse(new InstantCommand(() -> shooterSubsystem.setShooterVoltage(0)));
+        .onTrue(new InstantCommand(() -> intakeSubsystem.setPivotZero()).ignoringDisable(true));
     controller
         .leftBumper()
         .whileTrue(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(4)))
         .onFalse(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(0)));
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-    controller.x().onTrue(new InstantCommand(() -> shooterSubsystem.setHoodZero()));
+    controller
+        .x()
+        .onTrue(new InstantCommand(() -> shooterSubsystem.setHoodZero()).ignoringDisable(true));
     controller
         .povUp()
         .whileTrue(
             new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(1, 0, 0)), drive)
+                .alongWith(new WaitCommand(20)));
+    controller
+        .povRight()
+        .whileTrue(
+            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(0, 1, 0)), drive)
                 .alongWith(new WaitCommand(20)));
     // Reset gyro to 0° when B button is pressed
     controller
@@ -194,7 +207,6 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
-
     controller
         .leftTrigger()
         .whileTrue(
@@ -202,6 +214,8 @@ public class RobotContainer {
     controller
         .rightStick()
         .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
+
+    controller.rightTrigger().whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller

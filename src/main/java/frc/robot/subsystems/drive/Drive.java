@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -54,6 +55,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
   private static Drive instance;
+  private static Field2d field = new Field2d();
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
   public static final double DRIVE_BASE_RADIUS =
@@ -69,6 +71,7 @@ public class Drive extends SubsystemBase {
   private static final double ROBOT_MASS_KG = 74.088;
   private static final double ROBOT_MOI = 6.883;
   private static final double WHEEL_COF = 1.2;
+  public static double distanceToGoal;
   private static final RobotConfig PP_CONFIG =
       new RobotConfig(
           ROBOT_MASS_KG,
@@ -211,6 +214,9 @@ public class Drive extends SubsystemBase {
 
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+
+      field.setRobotPose(this.getPose());
+      SmartDashboard.putData(field);
     }
     updateVision();
     // Update gyro alert
@@ -232,7 +238,8 @@ public class Drive extends SubsystemBase {
       dx = Constants.aimconstants.redgoalpos.getX() - robotX;
       dy = Constants.aimconstants.redgoalpos.getY() - robotY;
     }
-    Logger.recordOutput("Drive/dist_from_goal", Math.hypot(dx, dy));
+    distanceToGoal = Math.hypot(dx, dy);
+    Logger.recordOutput("Drive/dist_from_goal", distanceToGoal);
   }
 
   public void updateVision() {

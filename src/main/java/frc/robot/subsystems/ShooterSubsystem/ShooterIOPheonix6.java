@@ -1,7 +1,6 @@
 package frc.robot.subsystems.ShooterSubsystem;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
@@ -30,44 +29,38 @@ public class ShooterIOPheonix6 implements ShooterIO {
         new TalonFX(Constants.MotorCANIds.shooterMotor3CANId, Constants.MotorCANIds.CanBusName);
     hoodMotor = new TalonFX(Constants.MotorCANIds.hoodMotorCANId, Constants.MotorCANIds.CanBusName);
 
-    Slot0Configs shooterSlot0 =
-        new Slot0Configs()
-            .withKP(Constants.ShooterSubsystemPID.shooterKP)
-            .withKI(Constants.ShooterSubsystemPID.shooterKI)
-            .withKD(Constants.ShooterSubsystemPID.shooterKD)
-            .withKS(Constants.ShooterSubsystemPID.shooterKS)
-            .withKV(Constants.ShooterSubsystemPID.shooterKV);
-    TalonFXConfiguration shooterConfig =
-        new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
-            .withSlot0(shooterSlot0);
-    TalonFXConfiguration shooterConfigInverted =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs()
-                    .withNeutralMode(NeutralModeValue.Coast)
-                    .withInverted(InvertedValue.Clockwise_Positive))
-            .withSlot0(shooterSlot0);
+    Slot0Configs shooterSlot0 = new Slot0Configs();
+    shooterSlot0.kP = Constants.ShooterSubsystemPID.shooterKP;
+    shooterSlot0.kI = Constants.ShooterSubsystemPID.shooterKI;
+    shooterSlot0.kD = Constants.ShooterSubsystemPID.shooterKD;
+    shooterSlot0.kS = Constants.ShooterSubsystemPID.shooterKS;
+    shooterSlot0.kV = Constants.ShooterSubsystemPID.shooterKV;
+
+    TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
+    shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    shooterConfig.Slot0 = shooterSlot0;
+
+    TalonFXConfiguration shooterConfigInverted = new TalonFXConfiguration();
+    shooterConfigInverted.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    shooterConfigInverted.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    shooterConfigInverted.Slot0 = shooterSlot0;
     shooterMotor1.getConfigurator().apply(shooterConfig);
     shooterMotor2.getConfigurator().apply(shooterConfig);
     shooterMotor3.getConfigurator().apply(shooterConfigInverted);
-    TalonFXConfiguration hoodConfig =
-        new TalonFXConfiguration()
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
-            .withSlot0(
-                new Slot0Configs()
-                    .withKP(Constants.ShooterSubsystemPID.hoodKP)
-                    .withKI(Constants.ShooterSubsystemPID.hoodKI)
-                    .withKD(Constants.ShooterSubsystemPID.hoodKD)
-                    .withKS(Constants.ShooterSubsystemPID.hoodKS)
-                    .withKV(Constants.ShooterSubsystemPID.hoodKV))
-            .withMotionMagic(
-                new MotionMagicConfigs()
-                    .withMotionMagicCruiseVelocity(
-                        Constants.ShooterSubsystemPID.hoodMotionMagicCruiseVelocity)
-                    .withMotionMagicAcceleration(
-                        Constants.ShooterSubsystemPID.hoodMotionMagicAcceleration)
-                    .withMotionMagicJerk(Constants.ShooterSubsystemPID.hoodMotionMagicJerk));
+    TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
+    hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    hoodConfig.Slot0 = new Slot0Configs();
+    hoodConfig.Slot0.kP = Constants.ShooterSubsystemPID.hoodKP;
+    hoodConfig.Slot0.kI = Constants.ShooterSubsystemPID.hoodKI;
+    hoodConfig.Slot0.kD = Constants.ShooterSubsystemPID.hoodKD;
+    hoodConfig.Slot0.kS = Constants.ShooterSubsystemPID.hoodKS;
+    hoodConfig.Slot0.kV = Constants.ShooterSubsystemPID.hoodKV;
+    hoodConfig.MotionMagic = new MotionMagicConfigs();
+    hoodConfig.MotionMagic.MotionMagicCruiseVelocity =
+        Constants.ShooterSubsystemPID.hoodMotionMagicCruiseVelocity;
+    hoodConfig.MotionMagic.MotionMagicAcceleration =
+        Constants.ShooterSubsystemPID.hoodMotionMagicAcceleration;
+    hoodConfig.MotionMagic.MotionMagicJerk = Constants.ShooterSubsystemPID.hoodMotionMagicJerk;
     hoodConfig.Feedback.SensorToMechanismRatio = ShooterSubsystemPID.hoodGearRatio;
     hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     hoodMotor.getConfigurator().apply(hoodConfig);
