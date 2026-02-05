@@ -25,6 +25,7 @@ import frc.robot.commands.AimandDrive;
 import frc.robot.commands.Aimbot;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeSwing;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
@@ -118,7 +119,7 @@ public class RobotContainer {
     }
 
     NamedCommands.registerCommand(
-        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
+        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -180,8 +181,8 @@ public class RobotContainer {
     controller
         .leftBumper()
         .whileTrue(
-            new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(4))
-                .alongWith(new InstantCommand(() -> feederSubsystem.setBeltVoltage(4))))
+            new InstantCommand(() -> intakeSubsystem.setIntakeRps(60))
+                .alongWith(new InstantCommand(() -> feederSubsystem.setBeltVoltage(3))))
         .onFalse(
             new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0))
                 .alongWith(new InstantCommand(() -> feederSubsystem.setBeltVoltage(0))));
@@ -218,14 +219,9 @@ public class RobotContainer {
         .rightStick()
         .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
 
-    controller
-        .rightTrigger()
-        .whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
+    controller.rightTrigger().whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem));
 
-    controller
-        .y()
-        .whileTrue(new InstantCommand(() -> feederSubsystem.setIndexerRps(50)))
-        .onFalse(new InstantCommand(() -> feederSubsystem.setIndexerRps(0)));
+    controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 30));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller

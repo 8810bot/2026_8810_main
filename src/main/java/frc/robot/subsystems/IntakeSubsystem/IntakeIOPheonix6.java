@@ -68,13 +68,7 @@ public class IntakeIOPheonix6 implements IntakeIO {
 
   @Override
   public void Pivotsetangle(double degrees) {
-    double torque = pivotMotor.getTorqueCurrent().getValueAsDouble();
-    double velocity = Math.abs(pivotMotor.getVelocity().getValueAsDouble());
-    boolean isOverLoaded = (torque > 100) && (velocity < 0.015);
-    if (!isOverLoaded) { // Use Motion Magic only when the motor is not over-loaded
-      pivotMotor.setControl(
-          pivotMotionMagicRequest.withPosition(Units.degreesToRotations(degrees)));
-    }
+    pivotMotor.setControl(pivotMotionMagicRequest.withPosition(Units.degreesToRotations(degrees)));
   }
 
   @Override

@@ -96,12 +96,12 @@ public final class Constants {
   }
 
   public static class FeederSubsystemPID {
-    public static final double indexerKP = 0;
+    public static final double indexerKP = 1;
     public static final double indexerKI = 0;
     public static final double indexerKD = 0;
     public static final double indexerKS = 0;
     public static final double indexerKV = 0;
-    public static final double beltKP = 0;
+    public static final double beltKP = 1;
     public static final double beltKI = 0;
     public static final double beltKD = 0;
     public static final double beltKS = 0;
@@ -109,7 +109,7 @@ public final class Constants {
   }
 
   public static class IntakePID {
-    public static final double intakeKP = 0;
+    public static final double intakeKP = 2;
     public static final double intakeKI = 0;
     public static final double intakeKD = 0;
     public static final double intakeKS = 0;
@@ -121,7 +121,7 @@ public final class Constants {
     public static final double pivotKV = 0;
     public static final double pivotKG = 0.2;
     public static final double pivotGearRatio = 53.3;
-    public static final double pivotMotionMagicCruiseVelocity = 0.8;
+    public static final double pivotMotionMagicCruiseVelocity = 0.4;
     public static final double pivotMotionMagicAcceleration = 6.4;
     public static final double pivotMotionMagicJerk = 0;
   }
