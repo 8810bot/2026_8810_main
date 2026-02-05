@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
+import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 
@@ -15,17 +16,24 @@ public class Aimbot extends Command {
   private Drive drive;
   private ShooterSubsystem shooterSubsystem;
   private FeederSubsystem feederSubsystem;
+  private IntakeSubsystem intakeSubsystem;
   private double dist;
   private PIDController aimpid = new PIDController(5, 0, 0);
 
-  public Aimbot(Drive drive, ShooterSubsystem shooterSubsystem, FeederSubsystem feederSubsystem) {
+  public Aimbot(
+      Drive drive,
+      ShooterSubsystem shooterSubsystem,
+      FeederSubsystem feederSubsystem,
+      IntakeSubsystem intakeSubsystem) {
     this.drive = drive;
     this.shooterSubsystem = shooterSubsystem;
     this.feederSubsystem = feederSubsystem;
+    this.intakeSubsystem = intakeSubsystem;
 
     addRequirements(drive);
     addRequirements(shooterSubsystem);
     addRequirements(feederSubsystem);
+    addRequirements(intakeSubsystem);
 
     aimpid.enableContinuousInput(-Math.PI, Math.PI);
   }
@@ -66,9 +74,11 @@ public class Aimbot extends Command {
       shooterSubsystem.setShooterRps(targetRPS);
       shooterSubsystem.setHoodAngle(targetHoodAngle);
       if (shooterSubsystem.isAtSetSpeed(targetRPS)) {
-        feederSubsystem.setIndexerVoltage(8);
+        feederSubsystem.setIndexerRps(8);
+        feederSubsystem.setBeltRps(8);
       } else {
         feederSubsystem.setIndexerVoltage(0);
+        feederSubsystem.setBeltVoltage(0);
       }
     }
 
@@ -82,6 +92,8 @@ public class Aimbot extends Command {
   public void end(boolean interrupted) {
     feederSubsystem.setIndexerVoltage(0);
     shooterSubsystem.setShooterVoltage(0);
+    intakeSubsystem.setPivotAngle(0);
+    feederSubsystem.setBeltVoltage(0);
   }
 
   @Override

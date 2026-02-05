@@ -2,6 +2,7 @@ package frc.robot.subsystems.FeederSubsystem;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -13,7 +14,7 @@ public class FeederIOPheonix6 implements FeederIO {
   private static TalonFX IndexerMotor, BeltMotor;
   private final VoltageOut indexerVoltageRequest = new VoltageOut(0.0);
   private final VoltageOut beltVoltageRequest = new VoltageOut(0.0);
-  private final VelocityVoltage indexerVelocityRequest = new VelocityVoltage(0.0);
+  private final VelocityTorqueCurrentFOC indexerVelocityRequest = new VelocityTorqueCurrentFOC(0.0);
   private final VelocityVoltage beltVelocityRequest = new VelocityVoltage(0.0);
 
   public FeederIOPheonix6() {
@@ -40,6 +41,7 @@ public class FeederIOPheonix6 implements FeederIO {
     beltConfig.Slot0.kD = Constants.FeederSubsystemPID.beltKD;
     beltConfig.Slot0.kS = Constants.FeederSubsystemPID.beltKS;
     beltConfig.Slot0.kV = Constants.FeederSubsystemPID.beltKV;
+    beltConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     BeltMotor.getConfigurator().apply(beltConfig);
   }
 

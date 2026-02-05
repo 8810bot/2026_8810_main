@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
@@ -32,6 +33,7 @@ public class IntakeIOPheonix6 implements IntakeIO {
     intakeConfig.Slot0.kD = Constants.IntakePID.intakeKD;
     intakeConfig.Slot0.kS = Constants.IntakePID.intakeKS;
     intakeConfig.Slot0.kV = Constants.IntakePID.intakeKV;
+    intakeConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     intakeMotor.getConfigurator().apply(intakeConfig);
 
     TalonFXConfiguration pivotConfig = new TalonFXConfiguration();
@@ -66,7 +68,13 @@ public class IntakeIOPheonix6 implements IntakeIO {
 
   @Override
   public void Pivotsetangle(double degrees) {
-    pivotMotor.setControl(pivotMotionMagicRequest.withPosition(Units.degreesToRotations(degrees)));
+    double torque = pivotMotor.getTorqueCurrent().getValueAsDouble();
+    double velocity = Math.abs(pivotMotor.getVelocity().getValueAsDouble());
+    boolean isOverLoaded = (torque > 100) && (velocity < 0.015);
+    if (!isOverLoaded) { // Use Motion Magic only when the motor is not over-loaded
+      pivotMotor.setControl(
+          pivotMotionMagicRequest.withPosition(Units.degreesToRotations(degrees)));
+    }
   }
 
   @Override

@@ -53,15 +53,14 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
   public final LoggedTunableNumber ShooterTestRPS = new LoggedTunableNumber("SHooterRPS", 60);
-  public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("HoodAngle", 10);
+  public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("HoodAngle", 0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
   public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   public FeederSubsystem feederSubsystem = new FeederSubsystem();
   public IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  /** The container for the robot. Contains subsystems, OI devices, a
-   * nd commands. */
+  /** The container for the robot. Contains subsystems, OI devices, a nd commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
@@ -119,7 +118,7 @@ public class RobotContainer {
     }
 
     NamedCommands.registerCommand(
-        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem));
+        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -180,8 +179,12 @@ public class RobotContainer {
         .onTrue(new InstantCommand(() -> intakeSubsystem.setPivotZero()).ignoringDisable(true));
     controller
         .leftBumper()
-        .whileTrue(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(4)))
-        .onFalse(new InstantCommand(() -> feederSubsystem.setIndexerVoltage(0)));
+        .whileTrue(
+            new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(4))
+                .alongWith(new InstantCommand(() -> feederSubsystem.setBeltVoltage(4))))
+        .onFalse(
+            new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0))
+                .alongWith(new InstantCommand(() -> feederSubsystem.setBeltVoltage(0))));
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
@@ -215,7 +218,14 @@ public class RobotContainer {
         .rightStick()
         .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
 
-    controller.rightTrigger().whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem));
+    controller
+        .rightTrigger()
+        .whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
+
+    controller
+        .y()
+        .whileTrue(new InstantCommand(() -> feederSubsystem.setIndexerRps(50)))
+        .onFalse(new InstantCommand(() -> feederSubsystem.setIndexerRps(0)));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller

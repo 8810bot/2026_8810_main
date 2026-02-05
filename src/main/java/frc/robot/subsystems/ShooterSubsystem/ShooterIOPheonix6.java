@@ -82,7 +82,13 @@ public class ShooterIOPheonix6 implements ShooterIO {
 
   @Override
   public void HoodSetAngle(double angle) {
-    hoodMotor.setControl(hoodMotionMagicRequest.withPosition(angle));
+    double torque = hoodMotor.getTorqueCurrent().getValueAsDouble();
+    double velocity = Math.abs(hoodMotor.getVelocity().getValueAsDouble());
+
+    boolean isOverLoaded = (torque > 100) && (velocity < 0.015);
+    if (!isOverLoaded) { // Use Motion Magic only when the motor is not over-loaded
+      hoodMotor.setControl(hoodMotionMagicRequest.withPosition(angle));
+    }
   }
 
   @Override
