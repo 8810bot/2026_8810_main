@@ -146,5 +146,14 @@ public final class Constants {
     public static final double hoodMotionMagicCruiseVelocity = 0.5;
     public static final double hoodMotionMagicAcceleration = 4;
     public static final double hoodMotionMagicJerk = 0;
+
+    public static final class HoodHomingConstants {
+      public static final double kHomingVolts = -1.0; // Reduced to -1.0V for safety as requested
+      public static final double kHomingCurrentThresholdAmps =
+          1.5; // Tune this value based on stall current
+      public static final double kHomingVelocityThreshold =
+          0.5; // Consider stalled if velocity is low
+      public static final double kHomingTimeThresholdSec = 0.1; // Time to be considered stalled
+    }
   }
 }

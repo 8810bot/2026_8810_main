@@ -11,6 +11,7 @@ import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
+import java.util.function.DoubleSupplier;
 
 public class Aimbot extends Command {
   private Drive drive;
@@ -19,11 +20,15 @@ public class Aimbot extends Command {
   private double dist;
   private PIDController aimpid = new PIDController(5, 0, 0);
   private boolean swing = false;
+  private DoubleSupplier indexerVolts;
+  private DoubleSupplier beltVolts;
+
   private enum STAT {
     At_dgr1,
     moving,
     At_dgr2
   };
+
   private STAT state = STAT.At_dgr1;
 
   private IntakeSubsystem intakeSubsystem;
@@ -32,11 +37,15 @@ public class Aimbot extends Command {
       Drive drive,
       ShooterSubsystem shooterSubsystem,
       FeederSubsystem feederSubsystem,
-      IntakeSubsystem intakeSubsystem) {
+      IntakeSubsystem intakeSubsystem,
+      DoubleSupplier indexerVolts,
+      DoubleSupplier beltVolts) {
     this.drive = drive;
     this.shooterSubsystem = shooterSubsystem;
     this.feederSubsystem = feederSubsystem;
     this.intakeSubsystem = intakeSubsystem;
+    this.indexerVolts = indexerVolts;
+    this.beltVolts = beltVolts;
     addRequirements(drive);
     addRequirements(shooterSubsystem);
     addRequirements(intakeSubsystem);
@@ -79,8 +88,8 @@ public class Aimbot extends Command {
       shooterSubsystem.setShooterRps(targetRPS);
       shooterSubsystem.setHoodAngle(targetHoodAngle);
       if (shooterSubsystem.isAtSetSpeed(targetRPS)) {
-        feederSubsystem.setIndexerVoltage(12);
-        feederSubsystem.setBeltVoltage(12);
+        feederSubsystem.setIndexerVoltage(indexerVolts.getAsDouble());
+        feederSubsystem.setBeltVoltage(beltVolts.getAsDouble());
         swing = true;
       } // } else {
       //   feederSubsystem.setIndexerVoltage(0);

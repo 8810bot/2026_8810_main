@@ -70,9 +70,10 @@ public class AutonShoot extends Command {
       shooterSubsystem.setHoodAngle(targetHoodAngle);
       if (shooterSubsystem.isAtSetSpeed(targetRPS)) {
         feederSubsystem.setIndexerVoltage(8);
-      } else {
-        feederSubsystem.setIndexerVoltage(0);
       }
+      // else {
+      //   feederSubsystem.setIndexerVoltage(0);
+      // }
     }
 
     // SmartDashboard.putNumber("rps", targetRPS);

@@ -1,6 +1,8 @@
 package frc.robot.subsystems.ShooterSubsystem;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import org.littletonrobotics.junction.Logger;
@@ -67,6 +69,31 @@ public class ShooterSubsystem extends SubsystemBase {
   public void processLog() {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter", inputs);
+  }
+
+  /** Command to home the hood against the hardstop using current detection. */
+  public Command runHoodHoming() {
+    return Commands.sequence(
+        // Step 1: Apply homing voltage (Wait 0.2s to ignore inrush current)
+        Commands.run(
+                () ->
+                    io.HoodSetV(
+                        frc.robot.Constants.ShooterSubsystemPID.HoodHomingConstants.kHomingVolts),
+                this)
+            .beforeStarting(Commands.waitSeconds(0.2))
+            .until(
+                () ->
+                    Math.abs(inputs.HoodCurrentAMPS)
+                        > frc.robot.Constants.ShooterSubsystemPID.HoodHomingConstants
+                            .kHomingCurrentThresholdAmps),
+
+        // Step 2: Stop and Zero
+        Commands.runOnce(
+            () -> {
+              io.HoodSetV(0);
+              io.HoodSetZero();
+            },
+            this));
   }
 
   public boolean isAtSetSpeed(double targetRPS) {

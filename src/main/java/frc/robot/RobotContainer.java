@@ -55,6 +55,11 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
   public final LoggedTunableNumber ShooterTestRPS = new LoggedTunableNumber("SHooterRPS", 60);
+  public final LoggedTunableNumber IndexerTestRPS = new LoggedTunableNumber("IndexerRPS", 50);
+  public final LoggedTunableNumber BeltTestRPS = new LoggedTunableNumber("BeltRPS", 60);
+  public final LoggedTunableNumber IndexerShootVolts =
+      new LoggedTunableNumber("IndexerShootVolts", 12.0);
+  public final LoggedTunableNumber BeltShootVolts = new LoggedTunableNumber("BeltShootVolts", 12.0);
   public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("HoodAngle", 0);
 
   // Dashboard inputs
@@ -120,7 +125,14 @@ public class RobotContainer {
     }
 
     NamedCommands.registerCommand(
-        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
+        "AIMandShoot",
+        new Aimbot(
+            drive,
+            shooterSubsystem,
+            feederSubsystem,
+            intakeSubsystem,
+            IndexerShootVolts,
+            BeltShootVolts));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -221,10 +233,18 @@ public class RobotContainer {
 
     controller
         .rightTrigger()
-        .whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
+        .whileTrue(
+            new Aimbot(
+                drive,
+                shooterSubsystem,
+                feederSubsystem,
+                intakeSubsystem,
+                IndexerShootVolts,
+                BeltShootVolts));
 
     // test intake swing
     controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 40));
+
     controller.a().onTrue(new PivotInit(intakeSubsystem));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
