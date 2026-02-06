@@ -132,7 +132,7 @@ public final class Constants {
     public static final double shooterKI = 0;
     public static final double shooterKD = 0.1;
     public static final double shooterKS = 0;
-    public static final double shooterKV = 0;
+    public static final double shooterKV = 0.05;
     public static final double hoodGearRatio = 8. * 13.;
     public static final double hoodKP = 1000;
     public static final double hoodKI = 0;

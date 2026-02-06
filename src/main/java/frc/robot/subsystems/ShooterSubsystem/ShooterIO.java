@@ -3,7 +3,7 @@ package frc.robot.subsystems.ShooterSubsystem;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ShooterIO {
-  public default void ShooterSetRps(double rps) {}
+  public default void ShooterSetRps(double rps, double feedforwardAmps) {}
 
   public default void ShooterSetV(double voltage) {}
 
@@ -12,6 +12,8 @@ public interface ShooterIO {
   public default void HoodSetZero() {}
 
   public default void HoodSetV(double voltage) {}
+
+  public default void setPID(double kP, double kI, double kD, double kS, double kV) {}
 
   @AutoLog
   public class ShooterIOInputs {

@@ -67,10 +67,26 @@ public class ShooterIOPheonix6 implements ShooterIO {
   }
 
   @Override
-  public void ShooterSetRps(double rps) {
-    shooterMotor1.setControl(shooterVelocityRequest.withVelocity(rps));
-    shooterMotor2.setControl(shooterVelocityRequest.withVelocity(rps));
-    shooterMotor3.setControl(shooterVelocityRequest.withVelocity(rps));
+  public void ShooterSetRps(double rps, double feedforwardAmps) {
+    shooterMotor1.setControl(
+        shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
+    shooterMotor2.setControl(
+        shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
+    shooterMotor3.setControl(
+        shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
+  }
+
+  @Override
+  public void setPID(double kP, double kI, double kD, double kS, double kV) {
+    Slot0Configs shooterSlot0 = new Slot0Configs();
+    shooterSlot0.kP = kP;
+    shooterSlot0.kI = kI;
+    shooterSlot0.kD = kD;
+    shooterSlot0.kS = kS;
+    shooterSlot0.kV = kV;
+    shooterMotor1.getConfigurator().apply(shooterSlot0);
+    shooterMotor2.getConfigurator().apply(shooterSlot0);
+    shooterMotor3.getConfigurator().apply(shooterSlot0);
   }
 
   @Override

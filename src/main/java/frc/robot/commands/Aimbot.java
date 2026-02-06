@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
@@ -12,6 +13,7 @@ import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.Logger;
 
 public class Aimbot extends Command {
   private Drive drive;
@@ -20,8 +22,11 @@ public class Aimbot extends Command {
   private double dist;
   private PIDController aimpid = new PIDController(5, 0, 0);
   private boolean swing = false;
+  private boolean isShooting = false;
   private DoubleSupplier indexerVolts;
   private DoubleSupplier beltVolts;
+  private final Timer shotTimer = new Timer();
+  private final Timer speedStableTimer = new Timer();
 
   private enum STAT {
     At_dgr1,
@@ -57,6 +62,9 @@ public class Aimbot extends Command {
   public void initialize() {
     aimpid.setTolerance(0.087);
     dist = Drive.distanceToGoal;
+    isShooting = false;
+    shotTimer.stop();
+    shotTimer.reset();
   }
 
   @Override
@@ -64,11 +72,11 @@ public class Aimbot extends Command {
     Pose2d pose = drive.getPose();
     double robotX = pose.getX();
     double robotY = pose.getY();
-    double robotYaw = pose.getRotation().getRadians(); // radians
     double dx, dy = 0;
 
     // Vector from robot to goal
-    if (DriverStation.getAlliance().get() == Alliance.Blue) {
+    if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == Alliance.Blue) {
       dx = Constants.aimconstants.bluegoalpos.getX() - robotX;
       dy = Constants.aimconstants.bluegoalpos.getY() - robotY;
     } else {
@@ -78,24 +86,64 @@ public class Aimbot extends Command {
     // Target angle to goal (field frame)
     double targetAngle = Math.atan2(dy, dx); // radians
 
-    // Compute output
-    double turnOutput = aimpid.calculate(robotYaw, targetAngle);
+    double turnOutput = aimpid.calculate(drive.getRotation().getRadians(), targetAngle);
+    // Dynamic distance update
+    dist = Drive.distanceToGoal;
+
+    // Calculate targets based on distance (Calculate FIRST)
+    double targetRPS = (double) Constants.aimconstants.distanceToShooterRPS.get(dist);
+    double targetHoodAngle = (double) Constants.aimconstants.distanceToHoodAngle.get(dist);
+
     if (aimpid.atSetpoint()) {
       turnOutput = 0;
-      double targetRPS = (double) Constants.aimconstants.distanceToShooterRPS.get(dist);
-      double targetHoodAngle = (double) Constants.aimconstants.distanceToHoodAngle.get(dist);
       drive.stopWithX();
-      shooterSubsystem.setShooterRps(targetRPS);
-      shooterSubsystem.setHoodAngle(targetHoodAngle);
+
+      // Speed Stability Check
       if (shooterSubsystem.isAtSetSpeed(targetRPS)) {
-        feederSubsystem.setIndexerVoltage(indexerVolts.getAsDouble());
-        feederSubsystem.setBeltVoltage(beltVolts.getAsDouble());
-        swing = true;
-      } // } else {
-      //   feederSubsystem.setIndexerVoltage(0);
-      //   feederSubsystem.setBeltVoltage(0);
-      // }
+        speedStableTimer.start();
+      } else {
+        speedStableTimer.stop();
+        speedStableTimer.reset();
+      }
+
+      if (speedStableTimer.get() > 0.1) {
+        isShooting = true;
+      }
+    } else {
+      // Not at setpoint
+      speedStableTimer.stop();
+      speedStableTimer.reset();
     }
+
+    if (isShooting) {
+      feederSubsystem.setIndexerVoltage(indexerVolts.getAsDouble());
+      feederSubsystem.setBeltVoltage(beltVolts.getAsDouble());
+      swing = true;
+      shotTimer.start();
+    } else {
+      if (!aimpid.atSetpoint()) {
+        isShooting = false;
+      }
+
+      shotTimer.stop();
+      shotTimer.reset();
+    }
+
+    double compensation = 0;
+    double timeSinceStart = shotTimer.get() - ShooterSubsystem.shotDelay.get();
+
+    // Only apply if delay has passed
+    if (timeSinceStart >= 0) {
+      // Periodic check: time % period < duration
+      double period = ShooterSubsystem.shotFirePeriod.get();
+      if (period > 0 && (timeSinceStart % period) < ShooterSubsystem.shotPulseDuration.get()) {
+        compensation = ShooterSubsystem.shotCurrentFF.get();
+      }
+    }
+
+    // Always apply shooter/hood targets
+    shooterSubsystem.setShooterRps(targetRPS, compensation);
+    shooterSubsystem.setHoodAngle(targetHoodAngle);
     if (swing) {
       double current_dgr = intakeSubsystem.getPivotAngleDegrees();
       if (Constants.ShooterSubsystemPID.swing_angle_1 + 2 < current_dgr && state == STAT.At_dgr1
@@ -119,8 +167,25 @@ public class Aimbot extends Command {
       }
     }
 
-    // SmartDashboard.putNumber("rps", targetRPS);
-    // SmartDashboard.putNumber("hood_angle", targetHoodAngle);
+    Logger.recordOutput("Aimbot/TargetRPS", targetRPS);
+    Logger.recordOutput("Aimbot/TargetHoodAngle", targetHoodAngle);
+    Logger.recordOutput("Aimbot/Distance", dist);
+    Logger.recordOutput("Aimbot/AtSetpoint", aimpid.atSetpoint());
+    Logger.recordOutput("Aimbot/IsShooting", isShooting);
+    Logger.recordOutput("Aimbot/SpeedStableTimer", speedStableTimer.get());
+    Logger.recordOutput("Aimbot/ShotTimer", shotTimer.get());
+    Logger.recordOutput("Aimbot/PIDError", aimpid.getPositionError());
+    Logger.recordOutput("Aimbot/TargetYaw", targetAngle);
+    if (DriverStation.getAlliance().isPresent()) {
+      Logger.recordOutput(
+          "Aimbot/TargetPosition",
+          new Pose2d(
+              DriverStation.getAlliance().get() == Alliance.Blue
+                  ? Constants.aimconstants.bluegoalpos
+                  : Constants.aimconstants.redgoalpos,
+              new edu.wpi.first.math.geometry.Rotation2d())); // Log target position
+    }
+
     ChassisSpeeds aimspeed = new ChassisSpeeds(0, 0, turnOutput);
     drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(aimspeed, pose.getRotation()));
   }
@@ -131,6 +196,9 @@ public class Aimbot extends Command {
     shooterSubsystem.setShooterVoltage(0);
     feederSubsystem.setBeltVoltage(0);
     intakeSubsystem.setPivotAngle(0);
+    isShooting = false;
+    shotTimer.stop();
+    shotTimer.reset();
   }
 
   @Override
