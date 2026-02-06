@@ -51,7 +51,7 @@ public class FeederIOPheonix6 implements FeederIO {
 
   @Override
   public void IndexerSetRps(double RPS) {
-    IndexerMotor.setControl(indexerVelocityRequest.withVelocity(RPS));
+    IndexerMotor.setControl(indexerVelocityRequest.withVelocity(RPS * 12 / 36));
   }
 
   @Override

@@ -96,12 +96,12 @@ public final class Constants {
   }
 
   public static class FeederSubsystemPID {
-    public static final double indexerKP = 1;
+    public static final double indexerKP = 10;
     public static final double indexerKI = 0;
     public static final double indexerKD = 0;
     public static final double indexerKS = 0;
     public static final double indexerKV = 0;
-    public static final double beltKP = 1;
+    public static final double beltKP = 10;
     public static final double beltKI = 0;
     public static final double beltKD = 0;
     public static final double beltKS = 0;
@@ -109,7 +109,7 @@ public final class Constants {
   }
 
   public static class IntakePID {
-    public static final double intakeKP = 2;
+    public static final double intakeKP = 10;
     public static final double intakeKI = 0;
     public static final double intakeKD = 0;
     public static final double intakeKS = 0;
@@ -124,6 +124,7 @@ public final class Constants {
     public static final double pivotMotionMagicCruiseVelocity = 0.4;
     public static final double pivotMotionMagicAcceleration = 6.4;
     public static final double pivotMotionMagicJerk = 0;
+    public static final double pivotThresholdCurrentAmps = 5.0;
   }
 
   public static class ShooterSubsystemPID {
@@ -138,6 +139,9 @@ public final class Constants {
     public static final double hoodKD = 200;
     public static final double hoodKS = 0;
     public static final double hoodKV = 0;
+
+    public static final double swing_angle_1 = 0;
+    public static final double swing_angle_2 = 40;
 
     public static final double hoodMotionMagicCruiseVelocity = 0.5;
     public static final double hoodMotionMagicAcceleration = 4;

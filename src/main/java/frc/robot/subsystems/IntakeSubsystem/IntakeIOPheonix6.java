@@ -58,7 +58,7 @@ public class IntakeIOPheonix6 implements IntakeIO {
 
   @Override
   public void intakesetrps(double RPS) {
-    intakeMotor.setControl(intakeVelocityRequest.withVelocity(RPS));
+    intakeMotor.setControl(intakeVelocityRequest.withVelocity(RPS * 14 / 30));
   }
 
   @Override
@@ -88,5 +88,6 @@ public class IntakeIOPheonix6 implements IntakeIO {
         Units.rotationsToDegrees(pivotMotor.getPosition().getValueAsDouble());
     inputs.intakeCurrentAMPS = intakeMotor.getSupplyCurrent().getValueAsDouble();
     inputs.pivotCurrentAMPS = pivotMotor.getSupplyCurrent().getValueAsDouble();
+    inputs.PivotVelocityRPS = pivotMotor.getVelocity().getValueAsDouble();
   }
 }

@@ -20,6 +20,7 @@ public interface IntakeIO {
 
     public double intakeCurrentAMPS = 0;
     public double pivotCurrentAMPS = 0;
+    public double PivotVelocityRPS = 0;
   }
 
   public default void updateInputs(IntakeIOInputs inputs) {}

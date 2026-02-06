@@ -26,6 +26,7 @@ import frc.robot.commands.Aimbot;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeSwing;
+import frc.robot.commands.PivotInit;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
@@ -119,7 +120,7 @@ public class RobotContainer {
     }
 
     NamedCommands.registerCommand(
-        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem));
+        "AIMandShoot", new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -180,17 +181,16 @@ public class RobotContainer {
         .onTrue(new InstantCommand(() -> intakeSubsystem.setPivotZero()).ignoringDisable(true));
     controller
         .leftBumper()
-        .whileTrue(
-            new InstantCommand(() -> intakeSubsystem.setIntakeRps(60))
-                .alongWith(new InstantCommand(() -> feederSubsystem.setBeltVoltage(3))))
-        .onFalse(
-            new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0))
-                .alongWith(new InstantCommand(() -> feederSubsystem.setBeltVoltage(0))));
+        .whileTrue(new InstantCommand(() -> intakeSubsystem.setIntakeRps(60)))
+        .onFalse(new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0)));
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .x()
-        .onTrue(new InstantCommand(() -> shooterSubsystem.setHoodZero()).ignoringDisable(true));
+        .onTrue(
+            new InstantCommand(() -> shooterSubsystem.setHoodZero())
+                .ignoringDisable(true)
+                .alongWith(new InstantCommand(() -> intakeSubsystem.setPivotZero())));
     controller
         .povUp()
         .whileTrue(
@@ -219,9 +219,13 @@ public class RobotContainer {
         .rightStick()
         .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
 
-    controller.rightTrigger().whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem));
+    controller
+        .rightTrigger()
+        .whileTrue(new Aimbot(drive, shooterSubsystem, feederSubsystem, intakeSubsystem));
 
-    controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 30));
+    // test intake swing
+    controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 40));
+    controller.a().onTrue(new PivotInit(intakeSubsystem));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller

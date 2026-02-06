@@ -60,6 +60,10 @@ public class IntakeSubsystem extends SubsystemBase {
     return inputs.pivotCurrentAMPS;
   }
 
+  public double getPivotVelocityRps() {
+    return inputs.PivotVelocityRPS;
+  }
+
   public void processLog() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
