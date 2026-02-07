@@ -62,6 +62,17 @@ public class LoggedTunableNumber implements DoubleSupplier {
   }
 
   /**
+   * Set the value of the number
+   *
+   * @param value The value to set
+   */
+  public void set(double value) {
+    if (hasDefault && dashboardNumber != null) {
+      dashboardNumber.set(value);
+    }
+  }
+
+  /**
    * Get the current value, from dashboard if available and in tuning mode.
    *
    * @return The current value
