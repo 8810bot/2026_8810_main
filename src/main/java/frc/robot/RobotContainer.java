@@ -10,6 +10,7 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -246,6 +247,60 @@ public class RobotContainer {
     controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 40));
 
     controller.a().onTrue(new PivotInit(intakeSubsystem));
+
+    // Adjust Shooter RPS (Select = +5, Start = -5)
+    controller
+        .back()
+        .onTrue(new InstantCommand(() -> ShooterTestRPS.set(ShooterTestRPS.get() + 1)));
+    controller
+        .start()
+        .onTrue(new InstantCommand(() -> ShooterTestRPS.set(ShooterTestRPS.get() - 1)));
+
+    // Default command for ShooterSubsystem (Hood Control)
+    shooterSubsystem.setDefaultCommand(
+        Commands.run(
+            () -> {
+              double hoodVolts = -MathUtil.applyDeadband(controller.getRightY(), 0.1) * 12.0;
+              shooterSubsystem.setHoodVoltage(hoodVolts);
+              shooterSubsystem.setShooterVoltage(0);
+            },
+            shooterSubsystem));
+
+    // Manual Shooter Control (POV Left)
+    controller
+        .povLeft()
+        .toggleOnTrue(
+            Commands.runEnd(
+                () -> {
+                  shooterSubsystem.setShooterRps(ShooterTestRPS.get());
+                  // Keep manual hood control active while shooting
+                  double hoodVolts = -MathUtil.applyDeadband(controller.getRightY(), 0.1) * 12.0;
+                  shooterSubsystem.setHoodVoltage(hoodVolts);
+                },
+                () -> {
+                  shooterSubsystem.setShooterVoltage(0);
+                },
+                shooterSubsystem));
+
+    // Manual Feed and Swing (POV Down)
+    controller
+        .povDown()
+        .toggleOnTrue(
+            new IntakeSwing(
+                    intakeSubsystem,
+                    Constants.ShooterSubsystemPID.swing_angle_1,
+                    Constants.ShooterSubsystemPID.swing_angle_2)
+                .alongWith(
+                    Commands.runEnd(
+                        () -> {
+                          feederSubsystem.setIndexerVoltage(IndexerShootVolts.get());
+                          feederSubsystem.setBeltVoltage(BeltShootVolts.get());
+                        },
+                        () -> {
+                          feederSubsystem.setIndexerVoltage(0);
+                          feederSubsystem.setBeltVoltage(0);
+                        },
+                        feederSubsystem)));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller
