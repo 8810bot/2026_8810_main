@@ -25,6 +25,10 @@ public class ShooterSubsystem extends SubsystemBase {
       new LoggedTunableNumber("Shooter/kS", Constants.ShooterSubsystemPID.shooterKS);
   private static final LoggedTunableNumber kV =
       new LoggedTunableNumber("Shooter/kV", Constants.ShooterSubsystemPID.shooterKV);
+  private static final LoggedTunableNumber shooterPeakReverseTorque =
+      new LoggedTunableNumber(
+          "Shooter/PeakReverseTorque",
+          Constants.ShooterSubsystemPID.shooterPeakReverseTorqueCurrent);
   public static final LoggedTunableNumber shotCurrentFF =
       new LoggedTunableNumber("Shooter/ShotCurrentFF", 0.0);
   public static final LoggedTunableNumber shotDelay =
@@ -128,6 +132,7 @@ public class ShooterSubsystem extends SubsystemBase {
   public void processDashboard() {
     SmartDashboard.putNumber("Shooter/RPS", inputs.ShooterRPS);
     SmartDashboard.putNumber("Shooter/CurrentAMPS", inputs.ShooterCurrentAMPS);
+    SmartDashboard.putNumber("Shooter/TorqueCurrentAMPS", inputs.ShooterTorqueCurrent);
     SmartDashboard.putNumber("Shooter/HoodAngle", inputs.HoodAngle);
     SmartDashboard.putNumber("Shooter/HoodVoltageV", inputs.HoodVoltageV);
     SmartDashboard.putNumber("Shooter/HoodCurrentAMPS", inputs.HoodCurrentAMPS);
@@ -142,6 +147,9 @@ public class ShooterSubsystem extends SubsystemBase {
         || kS.hasChanged(hashCode())
         || kV.hasChanged(hashCode())) {
       io.setPID(kP.get(), kI.get(), kD.get(), kS.get(), kV.get());
+    }
+    if (shooterPeakReverseTorque.hasChanged(hashCode())) {
+      io.setPeakReverseTorque(shooterPeakReverseTorque.get());
     }
 
     processLog();

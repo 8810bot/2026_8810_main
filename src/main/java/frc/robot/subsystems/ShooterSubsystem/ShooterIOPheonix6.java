@@ -3,6 +3,7 @@ package frc.robot.subsystems.ShooterSubsystem;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -38,6 +39,8 @@ public class ShooterIOPheonix6 implements ShooterIO {
 
     TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    shooterConfig.TorqueCurrent.PeakReverseTorqueCurrent =
+        Constants.ShooterSubsystemPID.shooterPeakReverseTorqueCurrent;
     shooterConfig.Slot0 = shooterSlot0;
 
     TalonFXConfiguration shooterConfigInverted = new TalonFXConfiguration();
@@ -129,8 +132,30 @@ public class ShooterIOPheonix6 implements ShooterIO {
                 + shooterMotor2.getSupplyCurrent().getValueAsDouble()
                 + shooterMotor3.getSupplyCurrent().getValueAsDouble())
             / 3.0;
+    inputs.ShooterTorqueCurrent =
+        (shooterMotor1.getTorqueCurrent().getValueAsDouble()
+                + shooterMotor2.getTorqueCurrent().getValueAsDouble()
+                + shooterMotor3.getTorqueCurrent().getValueAsDouble())
+            / 3.0;
     inputs.HoodAngle = hoodMotor.getPosition().getValueAsDouble();
     inputs.HoodVoltageV = hoodMotor.getMotorVoltage().getValueAsDouble();
     inputs.HoodCurrentAMPS = hoodMotor.getSupplyCurrent().getValueAsDouble();
+  }
+
+  @Override
+  public void setPeakReverseTorque(double current) {
+    TorqueCurrentConfigs config = new TorqueCurrentConfigs();
+    // Read current config to avoid overwriting other values
+    shooterMotor1.getConfigurator().refresh(config);
+    config.PeakReverseTorqueCurrent = current;
+    shooterMotor1.getConfigurator().apply(config);
+
+    shooterMotor2.getConfigurator().refresh(config);
+    config.PeakReverseTorqueCurrent = current;
+    shooterMotor2.getConfigurator().apply(config);
+
+    shooterMotor3.getConfigurator().refresh(config);
+    config.PeakReverseTorqueCurrent = current;
+    shooterMotor3.getConfigurator().apply(config);
   }
 }

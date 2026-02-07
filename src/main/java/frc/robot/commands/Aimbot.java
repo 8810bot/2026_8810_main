@@ -99,7 +99,7 @@ public class Aimbot extends Command {
       drive.stopWithX();
 
       // Speed Stability Check
-      if (shooterSubsystem.isAtSetSpeed(targetRPS)) {
+      if (shooterSubsystem.isAtSetSpeed(targetRPS * 1.05)) {
         speedStableTimer.start();
       } else {
         speedStableTimer.stop();
@@ -142,8 +142,15 @@ public class Aimbot extends Command {
     }
 
     // Always apply shooter/hood targets
-    shooterSubsystem.setShooterRps(targetRPS, compensation);
+    shooterSubsystem.setShooterRps(targetRPS * 1.05, compensation);
     shooterSubsystem.setHoodAngle(targetHoodAngle);
+
+    Logger.recordOutput("Aimbot/CompensationAmps", compensation);
+    Logger.recordOutput("Aimbot/IsShooting", isShooting);
+    Logger.recordOutput("Aimbot/ShotTimer", shotTimer.get());
+    Logger.recordOutput("Aimbot/TimeSinceStart", timeSinceStart);
+    Logger.recordOutput("Aimbot/AtSetpoint", aimpid.atSetpoint());
+
     if (swing) {
       double current_dgr = intakeSubsystem.getPivotAngleDegrees();
       if (Constants.ShooterSubsystemPID.swing_angle_1 + 2 < current_dgr && state == STAT.At_dgr1

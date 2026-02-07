@@ -140,6 +140,8 @@ public final class Constants {
     public static final double hoodKS = 0;
     public static final double hoodKV = 0;
 
+    public static final double shooterPeakReverseTorqueCurrent = -1000.0;
+
     public static final double swing_angle_1 = 0;
     public static final double swing_angle_2 = 40;
 

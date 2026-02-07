@@ -15,10 +15,13 @@ public interface ShooterIO {
 
   public default void setPID(double kP, double kI, double kD, double kS, double kV) {}
 
+  public default void setPeakReverseTorque(double current) {}
+
   @AutoLog
   public class ShooterIOInputs {
     public double ShooterRPS = 0;
     public double ShooterCurrentAMPS = 0;
+    public double ShooterTorqueCurrent = 0;
     public double HoodAngle = 0;
     public double HoodVoltageV = 0;
     public double HoodCurrentAMPS = 0;
