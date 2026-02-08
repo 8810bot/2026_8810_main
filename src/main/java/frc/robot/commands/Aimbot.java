@@ -12,6 +12,7 @@ import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -24,6 +25,10 @@ public class Aimbot extends Command {
   private boolean swing = false;
   private boolean isShooting = false;
   private DoubleSupplier indexerVolts;
+  private final LoggedTunableNumber indexerRPS =
+      new LoggedTunableNumber("Aimbot/Targets/IndexerRPS", 70.0);
+  private static final LoggedTunableNumber shooterRPSMultiplier =
+      new LoggedTunableNumber("Aimbot/ShooterRPSMultiplier", 1.05);
   private DoubleSupplier beltVolts;
   private final Timer shotTimer = new Timer();
   private final Timer speedStableTimer = new Timer();
@@ -99,7 +104,7 @@ public class Aimbot extends Command {
       drive.stopWithX();
 
       // Speed Stability Check
-      if (shooterSubsystem.isAtSetSpeed(targetRPS * 1.05)) {
+      if (shooterSubsystem.isAtSetSpeed(targetRPS * shooterRPSMultiplier.get())) {
         speedStableTimer.start();
       } else {
         speedStableTimer.stop();
@@ -116,7 +121,8 @@ public class Aimbot extends Command {
     }
 
     if (isShooting) {
-      feederSubsystem.setIndexerVoltage(indexerVolts.getAsDouble());
+      // feederSubsystem.setIndexerVoltage(indexerVolts.getAsDouble());
+      feederSubsystem.setIndexerRps(indexerRPS.get());
       feederSubsystem.setBeltVoltage(beltVolts.getAsDouble());
       swing = true;
       shotTimer.start();
@@ -142,7 +148,8 @@ public class Aimbot extends Command {
     }
 
     // Always apply shooter/hood targets
-    shooterSubsystem.setShooterRps(targetRPS * 1.05, compensation);
+    double finalShooterRPS = targetRPS * shooterRPSMultiplier.get();
+    shooterSubsystem.setShooterRps(finalShooterRPS, compensation);
     shooterSubsystem.setHoodAngle(targetHoodAngle);
 
     Logger.recordOutput("Aimbot/CompensationAmps", compensation);
@@ -150,6 +157,7 @@ public class Aimbot extends Command {
     Logger.recordOutput("Aimbot/ShotTimer", shotTimer.get());
     Logger.recordOutput("Aimbot/TimeSinceStart", timeSinceStart);
     Logger.recordOutput("Aimbot/AtSetpoint", aimpid.atSetpoint());
+    Logger.recordOutput("Aimbot/FinalShooterRPS", finalShooterRPS);
 
     if (swing) {
       double current_dgr = intakeSubsystem.getPivotAngleDegrees();
@@ -199,7 +207,8 @@ public class Aimbot extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    feederSubsystem.setIndexerVoltage(0);
+    feederSubsystem.setIndexerRps(0);
+    // feederSubsystem.setIndexerVoltage(0);
     shooterSubsystem.setShooterVoltage(0);
     feederSubsystem.setBeltVoltage(0);
     intakeSubsystem.setPivotAngle(0);

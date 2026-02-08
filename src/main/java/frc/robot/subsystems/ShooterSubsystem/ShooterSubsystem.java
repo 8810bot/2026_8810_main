@@ -30,13 +30,13 @@ public class ShooterSubsystem extends SubsystemBase {
           "Shooter/PeakReverseTorque",
           Constants.ShooterSubsystemPID.shooterPeakReverseTorqueCurrent);
   public static final LoggedTunableNumber shotCurrentFF =
-      new LoggedTunableNumber("Shooter/ShotCurrentFF", 0.0);
+      new LoggedTunableNumber("Shooter/ShotCurrentFF", 37.0);
   public static final LoggedTunableNumber shotDelay =
-      new LoggedTunableNumber("Shooter/ShotDelay", 0.2);
+      new LoggedTunableNumber("Shooter/ShotDelay", 0.05);
   public static final LoggedTunableNumber shotPulseDuration =
-      new LoggedTunableNumber("Shooter/ShotPulseDuration", 0.1);
+      new LoggedTunableNumber("Shooter/ShotPulseDuration", 0.15);
   public static final LoggedTunableNumber shotFirePeriod =
-      new LoggedTunableNumber("Shooter/ShotFirePeriod", 0.3);
+      new LoggedTunableNumber("Shooter/ShotFirePeriod", 0.15);
 
   public static ShooterSubsystem getInstance() {
     return m_Instance == null ? m_Instance = new ShooterSubsystem() : m_Instance;
