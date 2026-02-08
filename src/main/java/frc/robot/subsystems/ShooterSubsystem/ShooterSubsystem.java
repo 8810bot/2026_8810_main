@@ -29,6 +29,38 @@ public class ShooterSubsystem extends SubsystemBase {
       new LoggedTunableNumber(
           "Shooter/PeakReverseTorque",
           Constants.ShooterSubsystemPID.shooterPeakReverseTorqueCurrent);
+  // === 控制模式选择 ===
+  public static final LoggedTunableNumber shooterControlMode =
+      new LoggedTunableNumber("Shooter/ControlMode", 0.0);
+  // 0 = 全程PID+脉冲前馈（默认）, 1 = 纯开环射击, 2 = 弱PID+开环射击, 3 = Bang-Bang控制
+
+  // === 开环电流参数（模式1、2使用）===
+  public static final LoggedTunableNumber shooterOpenLoopCurrent =
+      new LoggedTunableNumber("Shooter/OpenLoopCurrent", 40.0);
+
+  // === Bang-Bang 参数（仅模式3使用）===
+  public static final LoggedTunableNumber bangBangHighCurrent =
+      new LoggedTunableNumber("Shooter/BangBangHighCurrent", 50.0);
+  public static final LoggedTunableNumber bangBangLowCurrent =
+      new LoggedTunableNumber("Shooter/BangBangLowCurrent", 35.0);
+  public static final LoggedTunableNumber bangBangSteadyCurrent =
+      new LoggedTunableNumber("Shooter/BangBangSteadyCurrent", 38.0);
+  public static final LoggedTunableNumber bangBangDeadband =
+      new LoggedTunableNumber("Shooter/BangBangDeadband", 1.0);
+
+  // === Slot1 弱PID参数（仅模式2使用）===
+  public static final LoggedTunableNumber shooterSlot1_kP =
+      new LoggedTunableNumber("Shooter/Slot1_kP", 0.5);
+  public static final LoggedTunableNumber shooterSlot1_kI =
+      new LoggedTunableNumber("Shooter/Slot1_kI", 0.0);
+  public static final LoggedTunableNumber shooterSlot1_kD =
+      new LoggedTunableNumber("Shooter/Slot1_kD", 0.01);
+  public static final LoggedTunableNumber shooterSlot1_kS =
+      new LoggedTunableNumber("Shooter/Slot1_kS", 0.0);
+  public static final LoggedTunableNumber shooterSlot1_kV =
+      new LoggedTunableNumber("Shooter/Slot1_kV", 0.01);
+
+  // === 脉冲前馈参数（模式0使用，模式2可选）===
   public static final LoggedTunableNumber shotCurrentFF =
       new LoggedTunableNumber("Shooter/ShotCurrentFF", 37.0);
   public static final LoggedTunableNumber shotDelay =
@@ -37,6 +69,10 @@ public class ShooterSubsystem extends SubsystemBase {
       new LoggedTunableNumber("Shooter/ShotPulseDuration", 0.15);
   public static final LoggedTunableNumber shotFirePeriod =
       new LoggedTunableNumber("Shooter/ShotFirePeriod", 0.15);
+
+  // === 模式2是否启用脉冲前馈 ===
+  public static final LoggedTunableNumber shooterMode2EnablePulse =
+      new LoggedTunableNumber("Shooter/Mode2EnablePulse", 0.0);
 
   public static ShooterSubsystem getInstance() {
     return m_Instance == null ? m_Instance = new ShooterSubsystem() : m_Instance;
@@ -57,6 +93,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public void setShooterRps(double rps, double feedforwardAmps) {
     io.ShooterSetRps(rps, feedforwardAmps);
+  }
+
+  public void setShooterRpsWithSlot(double rps, int slot, double feedforwardAmps) {
+    io.ShooterSetRpsWithSlot(rps, slot, feedforwardAmps);
+  }
+
+  public void setShooterCurrent(double amps) {
+    io.ShooterSetCurrent(amps);
   }
 
   public void setShooterVoltage(double voltage) {
@@ -140,7 +184,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Check if PID constants have changed
+    // Check if Slot0 PID constants have changed
     if (kP.hasChanged(hashCode())
         || kI.hasChanged(hashCode())
         || kD.hasChanged(hashCode())
@@ -148,6 +192,21 @@ public class ShooterSubsystem extends SubsystemBase {
         || kV.hasChanged(hashCode())) {
       io.setPID(kP.get(), kI.get(), kD.get(), kS.get(), kV.get());
     }
+
+    // Check if Slot1 PID constants have changed
+    if (shooterSlot1_kP.hasChanged(hashCode())
+        || shooterSlot1_kI.hasChanged(hashCode())
+        || shooterSlot1_kD.hasChanged(hashCode())
+        || shooterSlot1_kS.hasChanged(hashCode())
+        || shooterSlot1_kV.hasChanged(hashCode())) {
+      io.setPIDSlot1(
+          shooterSlot1_kP.get(),
+          shooterSlot1_kI.get(),
+          shooterSlot1_kD.get(),
+          shooterSlot1_kS.get(),
+          shooterSlot1_kV.get());
+    }
+
     if (shooterPeakReverseTorque.hasChanged(hashCode())) {
       io.setPeakReverseTorque(shooterPeakReverseTorque.get());
     }

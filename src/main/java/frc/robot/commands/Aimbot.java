@@ -33,6 +33,9 @@ public class Aimbot extends Command {
   private final Timer shotTimer = new Timer();
   private final Timer speedStableTimer = new Timer();
 
+  // Bang-Bang 控制器状态保持
+  private double bangBangLastCurrent = 0.0;
+
   private enum STAT {
     At_dgr1,
     moving,
@@ -135,29 +138,102 @@ public class Aimbot extends Command {
       shotTimer.reset();
     }
 
-    double compensation = 0;
+    // === 计算脉冲前馈（模式0和可选模式2使用）===
+    double pulseFeedforward = 0;
     double timeSinceStart = shotTimer.get() - ShooterSubsystem.shotDelay.get();
-
-    // Only apply if delay has passed
     if (timeSinceStart >= 0) {
-      // Periodic check: time % period < duration
       double period = ShooterSubsystem.shotFirePeriod.get();
       if (period > 0 && (timeSinceStart % period) < ShooterSubsystem.shotPulseDuration.get()) {
-        compensation = ShooterSubsystem.shotCurrentFF.get();
+        pulseFeedforward = ShooterSubsystem.shotCurrentFF.get();
       }
     }
 
-    // Always apply shooter/hood targets
+    // === 根据阶段和模式选择控制策略 ===
     double finalShooterRPS = targetRPS * shooterRPSMultiplier.get();
-    shooterSubsystem.setShooterRps(finalShooterRPS, compensation);
+    int controlMode = (int) ShooterSubsystem.shooterControlMode.get();
+    boolean isStable =
+        shooterSubsystem.isAtSetSpeed(finalShooterRPS) && speedStableTimer.get() > 0.1;
+
+    if (!isStable) {
+      // ====== 阶段1：稳速阶段（所有模式相同）======
+      shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
+      Logger.recordOutput("Aimbot/ShooterStage", "SPIN_UP");
+      Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
+
+    } else if (isShooting) {
+      // ====== 阶段2：射击阶段（根据模式分支）======
+
+      if (controlMode == 0) {
+        // === 模式0：全程PID + 脉冲前馈（当前方案）===
+        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, pulseFeedforward);
+        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+        Logger.recordOutput("Aimbot/ShooterMode", "MODE0_PID_PULSE");
+        Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
+
+      } else if (controlMode == 1) {
+        // === 模式1：纯开环射击 ===
+        double openLoopCurrent = ShooterSubsystem.shooterOpenLoopCurrent.get();
+        shooterSubsystem.setShooterCurrent(openLoopCurrent);
+        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+        Logger.recordOutput("Aimbot/ShooterMode", "MODE1_PURE_OPENLOOP");
+        Logger.recordOutput("Aimbot/OpenLoopCurrent", openLoopCurrent);
+
+      } else if (controlMode == 2) {
+        // === 模式2：弱PID + 开环射击（可选叠加脉冲）===
+        double feedforward = ShooterSubsystem.shooterOpenLoopCurrent.get();
+
+        // 可选：叠加脉冲前馈
+        if (ShooterSubsystem.shooterMode2EnablePulse.get() > 0.5) {
+          feedforward += pulseFeedforward;
+        }
+
+        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 1, feedforward);
+        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+        Logger.recordOutput("Aimbot/ShooterMode", "MODE2_HYBRID_CONTROL");
+        Logger.recordOutput("Aimbot/HybridFeedforward", feedforward);
+        Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
+
+      } else if (controlMode == 3) {
+        // === 模式3：Bang-Bang 控制器（带死区）===
+        double currentRPS = shooterSubsystem.getShooterRps();
+        double deadband = ShooterSubsystem.bangBangDeadband.get();
+        double error = finalShooterRPS - currentRPS;
+
+        double bangBangOutput;
+        if (error > deadband) {
+          // 转速显著偏低，全力加速
+          bangBangOutput = ShooterSubsystem.bangBangHighCurrent.get();
+        } else if (error < -deadband) {
+          // 转速显著偏高，减速
+          bangBangOutput = ShooterSubsystem.bangBangLowCurrent.get();
+        } else {
+          // 在死区内，使用稳态电流
+          bangBangOutput = ShooterSubsystem.bangBangSteadyCurrent.get();
+        }
+
+        bangBangLastCurrent = bangBangOutput;
+        shooterSubsystem.setShooterCurrent(bangBangOutput);
+        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+        Logger.recordOutput("Aimbot/ShooterMode", "MODE3_BANGBANG");
+        Logger.recordOutput("Aimbot/BangBangOutput", bangBangOutput);
+        Logger.recordOutput("Aimbot/BangBangError", error);
+      }
+
+    } else {
+      // ====== 稳定但未射击：保持稳速状态 ======
+      shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
+      Logger.recordOutput("Aimbot/ShooterStage", "STABLE_IDLE");
+      Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
+    }
+
     shooterSubsystem.setHoodAngle(targetHoodAngle);
 
-    Logger.recordOutput("Aimbot/CompensationAmps", compensation);
-    Logger.recordOutput("Aimbot/IsShooting", isShooting);
-    Logger.recordOutput("Aimbot/ShotTimer", shotTimer.get());
-    Logger.recordOutput("Aimbot/TimeSinceStart", timeSinceStart);
-    Logger.recordOutput("Aimbot/AtSetpoint", aimpid.atSetpoint());
+    // === 通用日志输出 ===
     Logger.recordOutput("Aimbot/FinalShooterRPS", finalShooterRPS);
+    Logger.recordOutput("Aimbot/IsStable", isStable);
+    Logger.recordOutput("Aimbot/IsShooting", isShooting);
+    Logger.recordOutput("Aimbot/ControlModeSelect", controlMode);
+    Logger.recordOutput("Aimbot/TimeSinceStart", timeSinceStart);
 
     if (swing) {
       double current_dgr = intakeSubsystem.getPivotAngleDegrees();
