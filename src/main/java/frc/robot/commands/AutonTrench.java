@@ -49,7 +49,7 @@ public class AutonTrench extends Command {
     } else {
       rot_target = Math.PI;
     }
-    shooterSubsystem.setHoodAngle(1);
+    shooterSubsystem.setHoodAngle(0);
   }
 
   @Override

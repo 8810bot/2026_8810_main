@@ -128,9 +128,9 @@ public final class Constants {
   }
 
   public static class ShooterSubsystemPID {
-    public static final double shooterKP = 6;
+    public static final double shooterKP = 7;
     public static final double shooterKI = 0;
-    public static final double shooterKD = 0.1;
+    public static final double shooterKD = 0.15;
     public static final double shooterKS = 0;
     public static final double shooterKV = 0;
     public static final double hoodGearRatio = 8. * 13.;

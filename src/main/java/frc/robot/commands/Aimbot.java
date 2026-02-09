@@ -14,9 +14,9 @@ import frc.robot.subsystems.drive.Drive;
 import java.util.function.DoubleSupplier;
 
 public class Aimbot extends Command {
-  private Drive drive;
-  private ShooterSubsystem shooterSubsystem;
-  private FeederSubsystem feederSubsystem;
+  private final Drive drive = Drive.getInstance();
+  private final ShooterSubsystem shooterSubsystem = ShooterSubsystem.getInstance();
+  private final FeederSubsystem feederSubsystem = FeederSubsystem.getInstance();
   private double dist;
   private PIDController aimpid = new PIDController(5, 0, 0);
   private boolean swing = false;
@@ -31,19 +31,9 @@ public class Aimbot extends Command {
 
   private STAT state = STAT.At_dgr1;
 
-  private IntakeSubsystem intakeSubsystem;
+  private final IntakeSubsystem intakeSubsystem = IntakeSubsystem.getInstance();
 
-  public Aimbot(
-      Drive drive,
-      ShooterSubsystem shooterSubsystem,
-      FeederSubsystem feederSubsystem,
-      IntakeSubsystem intakeSubsystem,
-      DoubleSupplier indexerVolts,
-      DoubleSupplier beltVolts) {
-    this.drive = drive;
-    this.shooterSubsystem = shooterSubsystem;
-    this.feederSubsystem = feederSubsystem;
-    this.intakeSubsystem = intakeSubsystem;
+  public Aimbot(DoubleSupplier indexerVolts, DoubleSupplier beltVolts) {
     this.indexerVolts = indexerVolts;
     this.beltVolts = beltVolts;
     addRequirements(drive);

@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.AimandDrive;
 import frc.robot.commands.Aimbot;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
@@ -68,6 +67,7 @@ public class RobotContainer {
   public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   public FeederSubsystem feederSubsystem = new FeederSubsystem();
   public IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+
   /** The container for the robot. Contains subsystems, OI devices, a nd commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
@@ -125,15 +125,7 @@ public class RobotContainer {
         break;
     }
 
-    NamedCommands.registerCommand(
-        "AIMandShoot",
-        new Aimbot(
-            drive,
-            shooterSubsystem,
-            feederSubsystem,
-            intakeSubsystem,
-            IndexerShootVolts,
-            BeltShootVolts));
+    NamedCommands.registerCommand("AIMandShoot", new Aimbot(IndexerShootVolts, BeltShootVolts));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -188,33 +180,7 @@ public class RobotContainer {
             () -> -controller.getRawAxis(0),
             () -> -controller.getRawAxis(4)));
 
-    // Lock to 0° when A button is held
-    controller
-        .rightBumper()
-        .onTrue(new InstantCommand(() -> intakeSubsystem.setPivotZero()).ignoringDisable(true));
-    controller
-        .leftBumper()
-        .whileTrue(new InstantCommand(() -> intakeSubsystem.setIntakeRps(60)))
-        .onFalse(new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0)));
-    // Switch to X pattern when X button is pressed
-    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-    controller
-        .x()
-        .onTrue(
-            new InstantCommand(() -> shooterSubsystem.setHoodZero())
-                .ignoringDisable(true)
-                .alongWith(new InstantCommand(() -> intakeSubsystem.setPivotZero())));
-    controller
-        .povUp()
-        .whileTrue(
-            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(1, 0, 0)), drive)
-                .alongWith(new WaitCommand(20)));
-    controller
-        .povRight()
-        .whileTrue(
-            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(0, 1, 0)), drive)
-                .alongWith(new WaitCommand(20)));
-    // Reset gyro to 0° when B button is pressed
+    // Drive and gyro controls
     controller
         .b()
         .onTrue(
@@ -225,46 +191,37 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
     controller
-        .leftTrigger()
+        .povUp()
         .whileTrue(
-            new AimandDrive(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(1, 0, 0)), drive)
+                .alongWith(new WaitCommand(20)));
     controller
-        .rightStick()
-        .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
-
-    controller
-        .rightTrigger()
+        .povRight()
         .whileTrue(
-            new Aimbot(
-                drive,
-                shooterSubsystem,
-                feederSubsystem,
-                intakeSubsystem,
-                IndexerShootVolts,
-                BeltShootVolts));
+            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(0, 1, 0)), drive)
+                .alongWith(new WaitCommand(20)));
 
-    // test intake swing
+    // Intake controls
+    controller
+        .rightBumper()
+        .onTrue(new InstantCommand(() -> intakeSubsystem.setPivotZero()).ignoringDisable(true));
+    controller
+        .leftBumper()
+        .whileTrue(new InstantCommand(() -> intakeSubsystem.setIntakeRps(60)))
+        .onFalse(new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0)));
+    controller.a().onTrue(new PivotInit(intakeSubsystem));
     controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 40));
 
-    controller.a().onTrue(new PivotInit(intakeSubsystem));
-
-    // Adjust Shooter RPS (Select = +5, Start = -5)
+    // Shooter controls
+    // Switch to X pattern when X button is pressed
+    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
-        .back()
-        .onTrue(new InstantCommand(() -> ShooterTestRPS.set(ShooterTestRPS.get() + 1)));
-    controller
-        .start()
-        .onTrue(new InstantCommand(() -> ShooterTestRPS.set(ShooterTestRPS.get() - 1)));
-
-    // Default command for ShooterSubsystem (Hood Control)
-    shooterSubsystem.setDefaultCommand(
-        Commands.run(
-            () -> {
-              double hoodVolts = -MathUtil.applyDeadband(controller.getRightY(), 0.1) * 12.0;
-              shooterSubsystem.setHoodVoltage(hoodVolts);
-              shooterSubsystem.setShooterVoltage(0);
-            },
-            shooterSubsystem));
+        .x()
+        .onTrue(
+            new InstantCommand(() -> shooterSubsystem.setHoodZero())
+                .ignoringDisable(true)
+                .alongWith(new InstantCommand(() -> intakeSubsystem.setPivotZero())));
+    controller.rightTrigger().whileTrue(new Aimbot(IndexerShootVolts, BeltShootVolts));
 
     // Manual Shooter Control (POV Left)
     controller
@@ -281,6 +238,11 @@ public class RobotContainer {
                   shooterSubsystem.setShooterVoltage(0);
                 },
                 shooterSubsystem));
+
+    // Assisted trench routine
+    controller
+        .rightStick()
+        .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
 
     // Manual Feed and Swing (POV Down)
     controller
@@ -301,6 +263,18 @@ public class RobotContainer {
                           feederSubsystem.setBeltVoltage(0);
                         },
                         feederSubsystem)));
+  }
+
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
+  }
+}
+
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller
@@ -354,14 +328,3 @@ public class RobotContainer {
     //                         0.0,
     //                         drive.getRotation())),
     //             drive));
-  }
-
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
-  }
-}
