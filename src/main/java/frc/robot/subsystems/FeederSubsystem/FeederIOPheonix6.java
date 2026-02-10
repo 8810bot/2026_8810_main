@@ -72,5 +72,7 @@ public class FeederIOPheonix6 implements FeederIO {
     inputs.IndexerCurrentAMPS = IndexerMotor.getSupplyCurrent().getValueAsDouble();
     inputs.BeltVoltageV = BeltMotor.getMotorVoltage().getValueAsDouble();
     inputs.IndexerVoltageV = IndexerMotor.getMotorVoltage().getValueAsDouble();
+    // Convert back to mechanism RPS: Motor RPS * (36/12)
+    inputs.IndexerMechanismRPS = inputs.IndexerVelocityRPS * (36.0 / 12.0);
   }
 }

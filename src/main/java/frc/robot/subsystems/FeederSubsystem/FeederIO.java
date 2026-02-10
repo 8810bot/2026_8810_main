@@ -20,6 +20,7 @@ public interface FeederIO {
     public double IndexerCurrentAMPS = 0;
     public double BeltVoltageV = 0;
     public double IndexerVoltageV = 0;
+    public double IndexerMechanismRPS = 0;
   }
 
   public default void updateInputs(FeederIOInputs inputs) {}

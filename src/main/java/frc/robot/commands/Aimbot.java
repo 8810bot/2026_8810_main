@@ -27,13 +27,14 @@ public class Aimbot extends Command {
   private DoubleSupplier indexerVolts;
   private final LoggedTunableNumber indexerRPS =
       new LoggedTunableNumber("Aimbot/Targets/IndexerRPS", 70.0);
+  private final LoggedTunableNumber beltRPS =
+      new LoggedTunableNumber("Aimbot/Targets/BeltRPS", 60.0);
   private static final LoggedTunableNumber shooterRPSMultiplier =
       new LoggedTunableNumber("Aimbot/ShooterRPSMultiplier", 1.05);
-  private DoubleSupplier beltVolts;
   private final Timer shotTimer = new Timer();
   private final Timer speedStableTimer = new Timer();
 
-  // Bang-Bang 控制器状态保持
+  // Bang-Bang controller state maintenance
   private double bangBangLastCurrent = 0.0;
 
   private enum STAT {
@@ -52,13 +53,13 @@ public class Aimbot extends Command {
       FeederSubsystem feederSubsystem,
       IntakeSubsystem intakeSubsystem,
       DoubleSupplier indexerVolts,
-      DoubleSupplier beltVolts) {
+      DoubleSupplier beltVolts) { // Retain parameter for compatibility
     this.drive = drive;
     this.shooterSubsystem = shooterSubsystem;
     this.feederSubsystem = feederSubsystem;
     this.intakeSubsystem = intakeSubsystem;
     this.indexerVolts = indexerVolts;
-    this.beltVolts = beltVolts;
+    // this.beltVolts = beltVolts; // Internal no longer uses voltage control, switched to beltRPS
     addRequirements(drive);
     addRequirements(shooterSubsystem);
     addRequirements(intakeSubsystem);
@@ -126,7 +127,7 @@ public class Aimbot extends Command {
     if (isShooting) {
       // feederSubsystem.setIndexerVoltage(indexerVolts.getAsDouble());
       feederSubsystem.setIndexerRps(indexerRPS.get());
-      feederSubsystem.setBeltVoltage(beltVolts.getAsDouble());
+      feederSubsystem.setBeltRps(beltRPS.get());
       swing = true;
       shotTimer.start();
     } else {
@@ -138,7 +139,7 @@ public class Aimbot extends Command {
       shotTimer.reset();
     }
 
-    // === 计算脉冲前馈（模式0和可选模式2使用）===
+    // === Calculate Pulse Feedforward (Used in Mode 0 and Optional Mode 2) ===
     double pulseFeedforward = 0;
     double timeSinceStart = shotTimer.get() - ShooterSubsystem.shotDelay.get();
     if (timeSinceStart >= 0) {
@@ -148,30 +149,30 @@ public class Aimbot extends Command {
       }
     }
 
-    // === 根据阶段和模式选择控制策略 ===
+    // === Select Control Strategy Based on Stage and Mode ===
     double finalShooterRPS = targetRPS * shooterRPSMultiplier.get();
     int controlMode = (int) ShooterSubsystem.shooterControlMode.get();
     boolean isStable =
         shooterSubsystem.isAtSetSpeed(finalShooterRPS) && speedStableTimer.get() > 0.1;
 
     if (!isStable) {
-      // ====== 阶段1：稳速阶段（所有模式相同）======
+      // ====== Stage 1: Spin Up (Same for all modes) ======
       shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
       Logger.recordOutput("Aimbot/ShooterStage", "SPIN_UP");
       Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
 
     } else if (isShooting) {
-      // ====== 阶段2：射击阶段（根据模式分支）======
+      // ====== Stage 2: Shooting (Branch based on mode) ======
 
       if (controlMode == 0) {
-        // === 模式0：全程PID + 脉冲前馈（当前方案）===
+        // === Mode 0: Full PID + Pulse Feedforward (Current Scheme) ===
         shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, pulseFeedforward);
         Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
         Logger.recordOutput("Aimbot/ShooterMode", "MODE0_PID_PULSE");
         Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
 
       } else if (controlMode == 1) {
-        // === 模式1：纯开环射击 ===
+        // === Mode 1: Pure Open Loop Shooting ===
         double openLoopCurrent = ShooterSubsystem.shooterOpenLoopCurrent.get();
         shooterSubsystem.setShooterCurrent(openLoopCurrent);
         Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
@@ -179,10 +180,10 @@ public class Aimbot extends Command {
         Logger.recordOutput("Aimbot/OpenLoopCurrent", openLoopCurrent);
 
       } else if (controlMode == 2) {
-        // === 模式2：弱PID + 开环射击（可选叠加脉冲）===
+        // === Mode 2: Weak PID + Open Loop Shooting (Optional Pulse Overlay) ===
         double feedforward = ShooterSubsystem.shooterOpenLoopCurrent.get();
 
-        // 可选：叠加脉冲前馈
+        // Optional: Overlay Pulse Feedforward
         if (ShooterSubsystem.shooterMode2EnablePulse.get() > 0.5) {
           feedforward += pulseFeedforward;
         }
@@ -194,20 +195,20 @@ public class Aimbot extends Command {
         Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
 
       } else if (controlMode == 3) {
-        // === 模式3：Bang-Bang 控制器（带死区）===
+        // === Mode 3: Bang-Bang Controller (With Deadband) ===
         double currentRPS = shooterSubsystem.getShooterRps();
         double deadband = ShooterSubsystem.bangBangDeadband.get();
         double error = finalShooterRPS - currentRPS;
 
         double bangBangOutput;
         if (error > deadband) {
-          // 转速显著偏低，全力加速
+          // Speed significantly low, full acceleration
           bangBangOutput = ShooterSubsystem.bangBangHighCurrent.get();
         } else if (error < -deadband) {
-          // 转速显著偏高，减速
+          // Speed significantly high, deceleration
           bangBangOutput = ShooterSubsystem.bangBangLowCurrent.get();
         } else {
-          // 在死区内，使用稳态电流
+          // Inside deadband, use steady current
           bangBangOutput = ShooterSubsystem.bangBangSteadyCurrent.get();
         }
 
@@ -220,7 +221,7 @@ public class Aimbot extends Command {
       }
 
     } else {
-      // ====== 稳定但未射击：保持稳速状态 ======
+      // ====== Stable but not shooting: Maintain spin up ======
       shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
       Logger.recordOutput("Aimbot/ShooterStage", "STABLE_IDLE");
       Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
@@ -286,7 +287,7 @@ public class Aimbot extends Command {
     feederSubsystem.setIndexerRps(0);
     // feederSubsystem.setIndexerVoltage(0);
     shooterSubsystem.setShooterVoltage(0);
-    feederSubsystem.setBeltVoltage(0);
+    feederSubsystem.setBeltRps(0);
     intakeSubsystem.setPivotAngle(0);
     isShooting = false;
     shotTimer.stop();

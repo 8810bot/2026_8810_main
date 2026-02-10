@@ -23,6 +23,8 @@ public interface ShooterIO {
 
   public default void setPeakReverseTorque(double current) {}
 
+  public default void setFollowerEnabled(boolean enabled) {}
+
   @AutoLog
   public class ShooterIOInputs {
     public double ShooterRPS = 0;

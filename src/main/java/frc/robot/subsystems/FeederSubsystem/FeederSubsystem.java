@@ -75,6 +75,7 @@ public class FeederSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Feeder/IndexerCurrentAMPS", inputs.IndexerCurrentAMPS);
     SmartDashboard.putNumber("Feeder/BeltVoltageV", inputs.BeltVoltageV);
     SmartDashboard.putNumber("Feeder/IndexerVoltageV", inputs.IndexerVoltageV);
+    SmartDashboard.putNumber("Feeder/IndexerMechanismRPS", inputs.IndexerMechanismRPS);
   }
 
   @Override

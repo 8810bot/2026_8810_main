@@ -55,13 +55,16 @@ public class RobotContainer {
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
-  public final LoggedTunableNumber ShooterTestRPS = new LoggedTunableNumber("SHooterRPS", 60);
-  public final LoggedTunableNumber IndexerTestRPS = new LoggedTunableNumber("IndexerRPS", 50);
-  public final LoggedTunableNumber BeltTestRPS = new LoggedTunableNumber("BeltRPS", 60);
+  public final LoggedTunableNumber ShooterTestRPS =
+      new LoggedTunableNumber("Manual/ShooterRPS", 60.0);
+  public final LoggedTunableNumber IndexerTestRPS =
+      new LoggedTunableNumber("Manual/IndexerRPS", 50.0);
+  public final LoggedTunableNumber BeltTestRPS = new LoggedTunableNumber("Manual/BeltRPS", 60.0);
   public final LoggedTunableNumber IndexerShootVolts =
-      new LoggedTunableNumber("IndexerShootVolts", 12.0);
-  public final LoggedTunableNumber BeltShootVolts = new LoggedTunableNumber("BeltShootVolts", 12.0);
-  public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("HoodAngle", 0);
+      new LoggedTunableNumber("Manual/IndexerShootVolts", 12.0);
+  public final LoggedTunableNumber BeltShootVolts =
+      new LoggedTunableNumber("Manual/BeltShootVolts", 12.0);
+  public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("Manual/HoodAngle", 0.0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -260,8 +263,12 @@ public class RobotContainer {
     shooterSubsystem.setDefaultCommand(
         Commands.run(
             () -> {
-              double hoodVolts = -MathUtil.applyDeadband(controller.getRightY(), 0.1) * 12.0;
-              shooterSubsystem.setHoodVoltage(hoodVolts);
+              double y = controller.getRightY();
+              if (Math.abs(y) > 0.99) {
+                shooterSubsystem.setHoodVoltage(-y);
+              } else {
+                shooterSubsystem.setHoodVoltage(0);
+              }
               shooterSubsystem.setShooterVoltage(0);
             },
             shooterSubsystem));

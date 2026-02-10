@@ -16,63 +16,69 @@ public class ShooterSubsystem extends SubsystemBase {
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
   private static final LoggedTunableNumber kP =
-      new LoggedTunableNumber("Shooter/kP", Constants.ShooterSubsystemPID.shooterKP);
+      new LoggedTunableNumber("Shooter/PID/Slot0/kP", Constants.ShooterSubsystemPID.shooterKP);
   private static final LoggedTunableNumber kI =
-      new LoggedTunableNumber("Shooter/kI", Constants.ShooterSubsystemPID.shooterKI);
+      new LoggedTunableNumber("Shooter/PID/Slot0/kI", Constants.ShooterSubsystemPID.shooterKI);
   private static final LoggedTunableNumber kD =
-      new LoggedTunableNumber("Shooter/kD", Constants.ShooterSubsystemPID.shooterKD);
+      new LoggedTunableNumber("Shooter/PID/Slot0/kD", Constants.ShooterSubsystemPID.shooterKD);
   private static final LoggedTunableNumber kS =
-      new LoggedTunableNumber("Shooter/kS", Constants.ShooterSubsystemPID.shooterKS);
+      new LoggedTunableNumber("Shooter/PID/Slot0/kS", Constants.ShooterSubsystemPID.shooterKS);
   private static final LoggedTunableNumber kV =
-      new LoggedTunableNumber("Shooter/kV", Constants.ShooterSubsystemPID.shooterKV);
+      new LoggedTunableNumber("Shooter/PID/Slot0/kV", Constants.ShooterSubsystemPID.shooterKV);
   private static final LoggedTunableNumber shooterPeakReverseTorque =
       new LoggedTunableNumber(
-          "Shooter/PeakReverseTorque",
+          "Shooter/Config/PeakReverseTorque",
           Constants.ShooterSubsystemPID.shooterPeakReverseTorqueCurrent);
-  // === 控制模式选择 ===
+
+  // === Control Mode Selection ===
   public static final LoggedTunableNumber shooterControlMode =
-      new LoggedTunableNumber("Shooter/ControlMode", 0.0);
-  // 0 = 全程PID+脉冲前馈（默认）, 1 = 纯开环射击, 2 = 弱PID+开环射击, 3 = Bang-Bang控制
+      new LoggedTunableNumber("Shooter/Config/Mode", 0.0);
+  // 0 = Full PID+Pulse FF (Default), 1 = Pure Open Loop, 2 = Weak PID+Open Loop, 3 = Bang-Bang
+  // Control
 
-  // === 开环电流参数（模式1、2使用）===
+  // === Follower Switch ===
+  public static final LoggedTunableNumber shooterEnableFollower =
+      new LoggedTunableNumber("Shooter/Config/EnableFollower", 1.0);
+
+  // === Open Loop Current Parameters (Used in Mode 1, 2) ===
   public static final LoggedTunableNumber shooterOpenLoopCurrent =
-      new LoggedTunableNumber("Shooter/OpenLoopCurrent", 40.0);
+      new LoggedTunableNumber("Shooter/OpenLoop/Current", 40.0);
 
-  // === Bang-Bang 参数（仅模式3使用）===
+  // === Bang-Bang Parameters (Only used in Mode 3) ===
   public static final LoggedTunableNumber bangBangHighCurrent =
-      new LoggedTunableNumber("Shooter/BangBangHighCurrent", 50.0);
+      new LoggedTunableNumber("Shooter/BangBang/HighCurrent", 50.0);
   public static final LoggedTunableNumber bangBangLowCurrent =
-      new LoggedTunableNumber("Shooter/BangBangLowCurrent", 35.0);
+      new LoggedTunableNumber("Shooter/BangBang/LowCurrent", 35.0);
   public static final LoggedTunableNumber bangBangSteadyCurrent =
-      new LoggedTunableNumber("Shooter/BangBangSteadyCurrent", 38.0);
+      new LoggedTunableNumber("Shooter/BangBang/SteadyCurrent", 38.0);
   public static final LoggedTunableNumber bangBangDeadband =
-      new LoggedTunableNumber("Shooter/BangBangDeadband", 1.0);
+      new LoggedTunableNumber("Shooter/BangBang/Deadband", 1.0);
 
-  // === Slot1 弱PID参数（仅模式2使用）===
+  // === Slot1 Weak PID Parameters (Only used in Mode 2) ===
   public static final LoggedTunableNumber shooterSlot1_kP =
-      new LoggedTunableNumber("Shooter/Slot1_kP", 0.5);
+      new LoggedTunableNumber("Shooter/PID/Slot1/kP", 0.5);
   public static final LoggedTunableNumber shooterSlot1_kI =
-      new LoggedTunableNumber("Shooter/Slot1_kI", 0.0);
+      new LoggedTunableNumber("Shooter/PID/Slot1/kI", 0.0);
   public static final LoggedTunableNumber shooterSlot1_kD =
-      new LoggedTunableNumber("Shooter/Slot1_kD", 0.01);
+      new LoggedTunableNumber("Shooter/PID/Slot1/kD", 0.01);
   public static final LoggedTunableNumber shooterSlot1_kS =
-      new LoggedTunableNumber("Shooter/Slot1_kS", 0.0);
+      new LoggedTunableNumber("Shooter/PID/Slot1/kS", 0.0);
   public static final LoggedTunableNumber shooterSlot1_kV =
-      new LoggedTunableNumber("Shooter/Slot1_kV", 0.01);
+      new LoggedTunableNumber("Shooter/PID/Slot1/kV", 0.01);
 
-  // === 脉冲前馈参数（模式0使用，模式2可选）===
+  // === Pulse Feedforward Parameters (Used in Mode 0, Optional in Mode 2) ===
   public static final LoggedTunableNumber shotCurrentFF =
-      new LoggedTunableNumber("Shooter/ShotCurrentFF", 37.0);
+      new LoggedTunableNumber("Shooter/Pulse/CurrentAdd", 37.0);
   public static final LoggedTunableNumber shotDelay =
-      new LoggedTunableNumber("Shooter/ShotDelay", 0.05);
+      new LoggedTunableNumber("Shooter/Pulse/Delay", 0.05);
   public static final LoggedTunableNumber shotPulseDuration =
-      new LoggedTunableNumber("Shooter/ShotPulseDuration", 0.15);
+      new LoggedTunableNumber("Shooter/Pulse/Duration", 0.15);
   public static final LoggedTunableNumber shotFirePeriod =
-      new LoggedTunableNumber("Shooter/ShotFirePeriod", 0.15);
+      new LoggedTunableNumber("Shooter/Pulse/Period", 0.15);
 
-  // === 模式2是否启用脉冲前馈 ===
+  // === Enable Pulse Feedforward in Mode 2 ===
   public static final LoggedTunableNumber shooterMode2EnablePulse =
-      new LoggedTunableNumber("Shooter/Mode2EnablePulse", 0.0);
+      new LoggedTunableNumber("Shooter/Hybrid/EnablePulse", 0.0);
 
   public static ShooterSubsystem getInstance() {
     return m_Instance == null ? m_Instance = new ShooterSubsystem() : m_Instance;
@@ -209,6 +215,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
     if (shooterPeakReverseTorque.hasChanged(hashCode())) {
       io.setPeakReverseTorque(shooterPeakReverseTorque.get());
+    }
+
+    if (shooterEnableFollower.hasChanged(hashCode())) {
+      io.setFollowerEnabled(shooterEnableFollower.get() > 0.5);
     }
 
     processLog();

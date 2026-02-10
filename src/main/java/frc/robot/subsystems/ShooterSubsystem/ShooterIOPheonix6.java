@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -22,6 +23,7 @@ public class ShooterIOPheonix6 implements ShooterIO {
       new MotionMagicTorqueCurrentFOC(0.0);
   private final VoltageOut shooterVoltageRequest = new VoltageOut(0.0);
   private final VoltageOut hoodVoltageRequest = new VoltageOut(0.0);
+  private boolean isFollowerEnabled = true;
 
   public ShooterIOPheonix6() {
     shooterMotor1 =
@@ -32,7 +34,7 @@ public class ShooterIOPheonix6 implements ShooterIO {
         new TalonFX(Constants.MotorCANIds.shooterMotor3CANId, Constants.MotorCANIds.CanBusName);
     hoodMotor = new TalonFX(Constants.MotorCANIds.hoodMotorCANId, Constants.MotorCANIds.CanBusName);
 
-    // Slot0: 强PID（稳速用）
+    // Slot0: Strong PID (For Spin Up)
     Slot0Configs shooterSlot0 = new Slot0Configs();
     shooterSlot0.kP = Constants.ShooterSubsystemPID.shooterKP;
     shooterSlot0.kI = Constants.ShooterSubsystemPID.shooterKI;
@@ -40,7 +42,7 @@ public class ShooterIOPheonix6 implements ShooterIO {
     shooterSlot0.kS = Constants.ShooterSubsystemPID.shooterKS;
     shooterSlot0.kV = Constants.ShooterSubsystemPID.shooterKV;
 
-    // Slot1: 弱PID（混合控制用）
+    // Slot1: Weak PID (For Hybrid Control)
     com.ctre.phoenix6.configs.Slot1Configs shooterSlot1 =
         new com.ctre.phoenix6.configs.Slot1Configs();
     shooterSlot1.kP = 0.5;
@@ -81,33 +83,52 @@ public class ShooterIOPheonix6 implements ShooterIO {
     hoodConfig.Feedback.SensorToMechanismRatio = ShooterSubsystemPID.hoodGearRatio;
     hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     hoodMotor.getConfigurator().apply(hoodConfig);
+
+    // Default Enable Follower
+    setFollowerEnabled(true);
+  }
+
+  @Override
+  public void setFollowerEnabled(boolean enabled) {
+    isFollowerEnabled = enabled;
+    if (enabled) {
+      shooterMotor2.setControl(new StrictFollower(shooterMotor1.getDeviceID()));
+      shooterMotor3.setControl(new StrictFollower(shooterMotor1.getDeviceID()));
+    }
+    // If disabled, no immediate action needed, subsequent control methods will take over motor2/3
   }
 
   @Override
   public void ShooterSetRps(double rps, double feedforwardAmps) {
     shooterMotor1.setControl(
         shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
-    shooterMotor2.setControl(
-        shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
-    shooterMotor3.setControl(
-        shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
+    if (!isFollowerEnabled) {
+      shooterMotor2.setControl(
+          shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
+      shooterMotor3.setControl(
+          shooterVelocityRequest.withVelocity(rps).withFeedForward(feedforwardAmps));
+    }
   }
 
   @Override
   public void ShooterSetRpsWithSlot(double rps, int slot, double feedforwardAmps) {
     shooterMotor1.setControl(
         shooterVelocityRequest.withVelocity(rps).withSlot(slot).withFeedForward(feedforwardAmps));
-    shooterMotor2.setControl(
-        shooterVelocityRequest.withVelocity(rps).withSlot(slot).withFeedForward(feedforwardAmps));
-    shooterMotor3.setControl(
-        shooterVelocityRequest.withVelocity(rps).withSlot(slot).withFeedForward(feedforwardAmps));
+    if (!isFollowerEnabled) {
+      shooterMotor2.setControl(
+          shooterVelocityRequest.withVelocity(rps).withSlot(slot).withFeedForward(feedforwardAmps));
+      shooterMotor3.setControl(
+          shooterVelocityRequest.withVelocity(rps).withSlot(slot).withFeedForward(feedforwardAmps));
+    }
   }
 
   @Override
   public void ShooterSetCurrent(double amps) {
     shooterMotor1.setControl(shooterCurrentRequest.withOutput(amps));
-    shooterMotor2.setControl(shooterCurrentRequest.withOutput(amps));
-    shooterMotor3.setControl(shooterCurrentRequest.withOutput(amps));
+    if (!isFollowerEnabled) {
+      shooterMotor2.setControl(shooterCurrentRequest.withOutput(amps));
+      shooterMotor3.setControl(shooterCurrentRequest.withOutput(amps));
+    }
   }
 
   @Override
@@ -140,8 +161,10 @@ public class ShooterIOPheonix6 implements ShooterIO {
   @Override
   public void ShooterSetV(double voltage) {
     shooterMotor1.setControl(shooterVoltageRequest.withOutput(voltage));
-    shooterMotor2.setControl(shooterVoltageRequest.withOutput(voltage));
-    shooterMotor3.setControl(shooterVoltageRequest.withOutput(voltage));
+    if (!isFollowerEnabled) {
+      shooterMotor2.setControl(shooterVoltageRequest.withOutput(voltage));
+      shooterMotor3.setControl(shooterVoltageRequest.withOutput(voltage));
+    }
   }
 
   @Override
