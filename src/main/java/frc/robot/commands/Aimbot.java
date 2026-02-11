@@ -218,6 +218,22 @@ public class Aimbot extends Command {
         Logger.recordOutput("Aimbot/ShooterMode", "MODE3_BANGBANG");
         Logger.recordOutput("Aimbot/BangBangOutput", bangBangOutput);
         Logger.recordOutput("Aimbot/BangBangError", error);
+      } else if (controlMode == 4) {
+        // === Mode 4: Enhanced Hybrid (Fixed Base + Pulse + Weak PID) ===
+        // Base: Fixed Open Loop Current
+        double feedforward = ShooterSubsystem.shooterOpenLoopCurrent.get();
+
+        // Overlay: Pulse Feedforward (Controlled by EnablePulse)
+        if (ShooterSubsystem.shooterMode2EnablePulse.get() > 0.5) {
+          feedforward += pulseFeedforward;
+        }
+
+        // Control: Use Slot1 (Weak PID) to compensate on top of total feedforward
+        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 1, feedforward);
+
+        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+        Logger.recordOutput("Aimbot/ShooterMode", "MODE4_ENHANCED_HYBRID");
+        Logger.recordOutput("Aimbot/TotalFeedforward", feedforward);
       }
 
     } else {
