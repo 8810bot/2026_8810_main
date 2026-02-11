@@ -1,5 +1,6 @@
 package frc.robot.subsystems.FeederSubsystem;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -74,5 +75,15 @@ public class FeederIOPheonix6 implements FeederIO {
     inputs.IndexerVoltageV = IndexerMotor.getMotorVoltage().getValueAsDouble();
     // Convert back to mechanism RPS: Motor RPS * (36/12)
     inputs.IndexerMechanismRPS = inputs.IndexerVelocityRPS * (36.0 / 12.0);
+  }
+
+  @Override
+  public void setStatorCurrentLimit(double amps) {
+    CurrentLimitsConfigs config = new CurrentLimitsConfigs();
+    config.StatorCurrentLimit = amps;
+    config.StatorCurrentLimitEnable = true;
+
+    IndexerMotor.getConfigurator().apply(config);
+    BeltMotor.getConfigurator().apply(config);
   }
 }

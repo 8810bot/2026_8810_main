@@ -80,6 +80,9 @@ public class ShooterSubsystem extends SubsystemBase {
   public static final LoggedTunableNumber shooterMode2EnablePulse =
       new LoggedTunableNumber("Shooter/Hybrid/EnablePulse", 0.0);
 
+  private double lastShooterLimit = -1.0;
+  private double lastHoodLimit = -1.0;
+
   public static ShooterSubsystem getInstance() {
     return m_Instance == null ? m_Instance = new ShooterSubsystem() : m_Instance;
   }
@@ -143,6 +146,26 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public double getHoodCurrentAmps() {
     return inputs.HoodCurrentAMPS;
+  }
+
+  public void setPeakReverseTorque(double current) {
+    if (Math.abs(current - shooterPeakReverseTorque.get()) > 1.0) {
+      io.setPeakReverseTorque(current);
+    }
+  }
+
+  public void setSystemCurrentLimit(double amps) {
+    if (Math.abs(amps - lastShooterLimit) > 1.0) {
+      io.setStatorCurrentLimit(amps);
+      lastShooterLimit = amps;
+    }
+  }
+
+  public void setHoodSystemCurrentLimit(double amps) {
+    if (Math.abs(amps - lastHoodLimit) > 1.0) {
+      io.setHoodStatorCurrentLimit(amps);
+      lastHoodLimit = amps;
+    }
   }
 
   public void processLog() {

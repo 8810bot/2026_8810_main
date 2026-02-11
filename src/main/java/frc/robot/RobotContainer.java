@@ -31,6 +31,10 @@ import frc.robot.commands.PivotInit;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
+import frc.robot.subsystems.PowerManager.PowerManager;
+import frc.robot.subsystems.PowerManager.PowerManagerIO;
+import frc.robot.subsystems.PowerManager.PowerManagerIOReal;
+import frc.robot.subsystems.PowerManager.PowerProfile;
 import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -71,6 +75,8 @@ public class RobotContainer {
   public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   public FeederSubsystem feederSubsystem = new FeederSubsystem();
   public IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  public PowerManager powerManager;
+
   /** The container for the robot. Contains subsystems, OI devices, a nd commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
@@ -85,6 +91,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
+        powerManager = new PowerManager(new PowerManagerIOReal());
 
         // The ModuleIOTalonFXS implementation provides an example implementation for
         // TalonFXS controller connected to a CANdi with a PWM encoder. The
@@ -114,6 +121,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
+        powerManager = new PowerManager(new PowerManagerIO() {});
         break;
 
       default:
@@ -125,8 +133,22 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        powerManager = new PowerManager(new PowerManagerIO() {});
         break;
     }
+
+    // Set up Power Distribution
+    powerManager.setDefaultCommand(
+        Commands.run(
+            () -> {
+              var state = powerManager.getCurrentState();
+              drive.setSystemCurrentLimit(state.driveCurrentLimit);
+              shooterSubsystem.setSystemCurrentLimit(state.shooterCurrentLimit);
+              shooterSubsystem.setHoodSystemCurrentLimit(state.hoodLimit);
+              feederSubsystem.setSystemCurrentLimit(state.feederCurrentLimit);
+              intakeSubsystem.setSystemCurrentLimit(state.intakeCurrentLimit);
+            },
+            powerManager));
 
     NamedCommands.registerCommand(
         "AIMandShoot",
@@ -230,7 +252,11 @@ public class RobotContainer {
     controller
         .leftTrigger()
         .whileTrue(
-            new AimandDrive(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+            Commands.runOnce(() -> powerManager.setProfile(PowerProfile.SHOOT_AND_DRIVE))
+                .andThen(
+                    new AimandDrive(
+                        drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()))
+                .finallyDo(() -> powerManager.setProfile(null)));
     controller
         .rightStick()
         .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
@@ -238,13 +264,16 @@ public class RobotContainer {
     controller
         .rightTrigger()
         .whileTrue(
-            new Aimbot(
-                drive,
-                shooterSubsystem,
-                feederSubsystem,
-                intakeSubsystem,
-                IndexerShootVolts,
-                BeltShootVolts));
+            Commands.runOnce(() -> powerManager.setProfile(PowerProfile.SHOOTING))
+                .andThen(
+                    new Aimbot(
+                        drive,
+                        shooterSubsystem,
+                        feederSubsystem,
+                        intakeSubsystem,
+                        IndexerShootVolts,
+                        BeltShootVolts))
+                .finallyDo(() -> powerManager.setProfile(null)));
 
     // test intake swing
     controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 40));

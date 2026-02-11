@@ -1,5 +1,6 @@
 package frc.robot.subsystems.ShooterSubsystem;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -225,5 +226,25 @@ public class ShooterIOPheonix6 implements ShooterIO {
     shooterMotor3.getConfigurator().refresh(config);
     config.PeakReverseTorqueCurrent = current;
     shooterMotor3.getConfigurator().apply(config);
+  }
+
+  @Override
+  public void setStatorCurrentLimit(double amps) {
+    CurrentLimitsConfigs config = new CurrentLimitsConfigs();
+    config.StatorCurrentLimit = amps;
+    config.StatorCurrentLimitEnable = true;
+
+    shooterMotor1.getConfigurator().apply(config);
+    shooterMotor2.getConfigurator().apply(config);
+    shooterMotor3.getConfigurator().apply(config);
+  }
+
+  @Override
+  public void setHoodStatorCurrentLimit(double amps) {
+    CurrentLimitsConfigs config = new CurrentLimitsConfigs();
+    config.StatorCurrentLimit = amps;
+    config.StatorCurrentLimitEnable = true;
+
+    hoodMotor.getConfigurator().apply(config);
   }
 }

@@ -94,6 +94,8 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
+  private double lastDriveLimit = -1.0;
+
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
@@ -443,5 +445,14 @@ public class Drive extends SubsystemBase {
       throw new IllegalStateException("Drive has not been constructed yet");
     }
     return instance;
+  }
+
+  public void setSystemCurrentLimit(double amps) {
+    if (Math.abs(amps - lastDriveLimit) > 1.0) {
+      for (var module : modules) {
+        module.setDriveCurrentLimit(amps);
+      }
+      lastDriveLimit = amps;
+    }
   }
 }

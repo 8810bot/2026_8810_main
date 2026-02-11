@@ -11,6 +11,8 @@ public interface FeederIO {
 
   public default void IndexerSetV(double voltage) {}
 
+  public default void setStatorCurrentLimit(double amps) {}
+
   @AutoLog
   public class FeederIOInputs {
     public double BeltVelocityRPS = 0;

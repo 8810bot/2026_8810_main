@@ -13,6 +13,8 @@ public interface IntakeIO {
 
   public default void pivotSetZero() {}
 
+  public default void setStatorCurrentLimit(double amps) {}
+
   @AutoLog
   public class IntakeIOInputs {
     public double intakeVelocityRPS = 0;

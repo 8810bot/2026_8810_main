@@ -11,6 +11,8 @@ public class FeederSubsystem extends SubsystemBase {
   private final FeederIO io;
   private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
 
+  private double lastLimit = -1.0;
+
   public static FeederSubsystem getInstance() {
     return m_Instance == null ? m_Instance = new FeederSubsystem() : m_Instance;
   }
@@ -37,6 +39,13 @@ public class FeederSubsystem extends SubsystemBase {
 
   public void setIndexerVoltage(double voltage) {
     io.IndexerSetV(voltage);
+  }
+
+  public void setSystemCurrentLimit(double amps) {
+    if (Math.abs(amps - lastLimit) > 1.0) {
+      io.setStatorCurrentLimit(amps);
+      lastLimit = amps;
+    }
   }
 
   public double getBeltVelocityRps() {

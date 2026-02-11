@@ -11,6 +11,8 @@ public class IntakeSubsystem extends SubsystemBase {
   private final IntakeIO io;
   private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
+  private double lastLimit = -1.0;
+
   public static IntakeSubsystem getInstance() {
     return m_Instance == null ? m_Instance = new IntakeSubsystem() : m_Instance;
   }
@@ -42,6 +44,13 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public void setPivotZero() {
     io.pivotSetZero();
+  }
+
+  public void setSystemCurrentLimit(double amps) {
+    if (Math.abs(amps - lastLimit) > 1.0) {
+      io.setStatorCurrentLimit(amps);
+      lastLimit = amps;
+    }
   }
 
   public double getIntakeVelocityRps() {

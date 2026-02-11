@@ -147,4 +147,12 @@ public class Module {
   public double getFFCharacterizationVelocity() {
     return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
   }
+
+  public void setDriveCurrentLimit(double amps) {
+    io.setDriveStatorCurrentLimit(amps);
+  }
+
+  public void setTurnCurrentLimit(double amps) {
+    io.setTurnStatorCurrentLimit(amps);
+  }
 }

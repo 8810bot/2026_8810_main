@@ -12,6 +12,7 @@ import static frc.robot.util.PhoenixUtil.*;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -260,5 +261,21 @@ public class ModuleIOTalonFX implements ModuleIO {
           case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(
               rotation.getRotations());
         });
+  }
+
+  @Override
+  public void setDriveStatorCurrentLimit(double amps) {
+    CurrentLimitsConfigs config = new CurrentLimitsConfigs();
+    config.StatorCurrentLimit = amps;
+    config.StatorCurrentLimitEnable = true;
+    driveTalon.getConfigurator().apply(config);
+  }
+
+  @Override
+  public void setTurnStatorCurrentLimit(double amps) {
+    CurrentLimitsConfigs config = new CurrentLimitsConfigs();
+    config.StatorCurrentLimit = amps;
+    config.StatorCurrentLimitEnable = true;
+    turnTalon.getConfigurator().apply(config);
   }
 }

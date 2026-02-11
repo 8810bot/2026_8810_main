@@ -1,5 +1,6 @@
 package frc.robot.subsystems.IntakeSubsystem;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -89,5 +90,15 @@ public class IntakeIOPheonix6 implements IntakeIO {
     inputs.intakeCurrentAMPS = intakeMotor.getSupplyCurrent().getValueAsDouble();
     inputs.pivotCurrentAMPS = pivotMotor.getSupplyCurrent().getValueAsDouble();
     inputs.PivotVelocityRPS = pivotMotor.getVelocity().getValueAsDouble();
+  }
+
+  @Override
+  public void setStatorCurrentLimit(double amps) {
+    CurrentLimitsConfigs config = new CurrentLimitsConfigs();
+    config.StatorCurrentLimit = amps;
+    config.StatorCurrentLimitEnable = true;
+
+    intakeMotor.getConfigurator().apply(config);
+    pivotMotor.getConfigurator().apply(config);
   }
 }

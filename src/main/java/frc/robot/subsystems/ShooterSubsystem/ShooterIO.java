@@ -25,6 +25,10 @@ public interface ShooterIO {
 
   public default void setFollowerEnabled(boolean enabled) {}
 
+  public default void setStatorCurrentLimit(double amps) {}
+
+  public default void setHoodStatorCurrentLimit(double amps) {}
+
   @AutoLog
   public class ShooterIOInputs {
     public double ShooterRPS = 0;
