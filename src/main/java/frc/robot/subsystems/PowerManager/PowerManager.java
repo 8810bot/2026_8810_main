@@ -162,6 +162,7 @@ public class PowerManager extends SubsystemBase {
 
   private void updateDistributionState(double throttleFactor) {
     double driveTarget = 0.0;
+    double steerTarget = 0.0;
     double shooterTarget = 0.0;
     double feederTarget = 0.0;
     double intakeTarget = 0.0;
@@ -170,6 +171,7 @@ public class PowerManager extends SubsystemBase {
     switch (currentProfile) {
       case IDLE:
         driveTarget = idleDrive.get();
+        steerTarget = idleSteer.get();
         shooterTarget = idleShooter.get();
         feederTarget = idleFeeder.get();
         intakeTarget = idleIntake.get();
@@ -177,6 +179,7 @@ public class PowerManager extends SubsystemBase {
         break;
       case DRIVING:
         driveTarget = drivingDrive.get();
+        steerTarget = drivingSteer.get();
         shooterTarget = drivingShooter.get();
         feederTarget = drivingFeeder.get();
         intakeTarget = drivingIntake.get();
@@ -184,6 +187,7 @@ public class PowerManager extends SubsystemBase {
         break;
       case SHOOTING:
         driveTarget = shootingDrive.get();
+        steerTarget = shootingSteer.get();
         shooterTarget = shootingShooter.get();
         feederTarget = shootingFeeder.get();
         intakeTarget = shootingIntake.get();
@@ -191,6 +195,7 @@ public class PowerManager extends SubsystemBase {
         break;
       case SHOOT_AND_DRIVE:
         driveTarget = shootDriveDrive.get();
+        steerTarget = shootDriveSteer.get();
         shooterTarget = shootDriveShooter.get();
         feederTarget = shootDriveFeeder.get();
         intakeTarget = shootDriveIntake.get();
@@ -198,6 +203,7 @@ public class PowerManager extends SubsystemBase {
         break;
       case AUTO:
         driveTarget = autoDrive.get();
+        steerTarget = autoSteer.get();
         shooterTarget = autoShooter.get();
         feederTarget = autoFeeder.get();
         intakeTarget = autoIntake.get();
@@ -206,6 +212,7 @@ public class PowerManager extends SubsystemBase {
     }
 
     currentState.driveCurrentLimit = calculateLimit(driveTarget, MIN_DRIVE_CURRENT, throttleFactor);
+    currentState.steerCurrentLimit = calculateLimit(steerTarget, MIN_STEER_CURRENT, throttleFactor);
     currentState.shooterCurrentLimit =
         calculateLimit(shooterTarget, MIN_SHOOTER_CURRENT, throttleFactor);
     currentState.feederCurrentLimit =

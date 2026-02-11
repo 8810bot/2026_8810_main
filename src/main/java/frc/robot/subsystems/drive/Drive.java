@@ -449,7 +449,7 @@ public class Drive extends SubsystemBase {
   }
 
   public void setSystemCurrentLimit(double amps) {
-    if (Math.abs(amps - lastDriveLimit) > 1.0) {
+    if (Math.abs(amps - lastDriveLimit) > 0.1) {
       for (var module : modules) {
         module.setDriveCurrentLimit(amps);
       }
@@ -458,7 +458,7 @@ public class Drive extends SubsystemBase {
   }
 
   public void setSystemTurnCurrentLimit(double amps) {
-    if (Math.abs(amps - lastTurnLimit) > 1.0) {
+    if (Math.abs(amps - lastTurnLimit) > 0.1) {
       for (var module : modules) {
         module.setTurnCurrentLimit(amps);
       }

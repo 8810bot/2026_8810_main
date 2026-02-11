@@ -149,20 +149,20 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void setPeakReverseTorque(double current) {
-    if (Math.abs(current - shooterPeakReverseTorque.get()) > 1.0) {
+    if (Math.abs(current - shooterPeakReverseTorque.get()) > 0.1) {
       io.setPeakReverseTorque(current);
     }
   }
 
   public void setSystemCurrentLimit(double amps) {
-    if (Math.abs(amps - lastShooterLimit) > 1.0) {
+    if (Math.abs(amps - lastShooterLimit) > 0.1) {
       io.setStatorCurrentLimit(amps);
       lastShooterLimit = amps;
     }
   }
 
   public void setHoodSystemCurrentLimit(double amps) {
-    if (Math.abs(amps - lastHoodLimit) > 1.0) {
+    if (Math.abs(amps - lastHoodLimit) > 0.1) {
       io.setHoodStatorCurrentLimit(amps);
       lastHoodLimit = amps;
     }

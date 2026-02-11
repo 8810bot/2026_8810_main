@@ -143,6 +143,7 @@ public class RobotContainer {
             () -> {
               var state = powerManager.getCurrentState();
               drive.setSystemCurrentLimit(state.driveCurrentLimit);
+              drive.setSystemTurnCurrentLimit(state.steerCurrentLimit);
               shooterSubsystem.setSystemCurrentLimit(state.shooterCurrentLimit);
               shooterSubsystem.setHoodSystemCurrentLimit(state.hoodLimit);
               feederSubsystem.setSystemCurrentLimit(state.feederCurrentLimit);

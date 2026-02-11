@@ -42,7 +42,7 @@ public class FeederSubsystem extends SubsystemBase {
   }
 
   public void setSystemCurrentLimit(double amps) {
-    if (Math.abs(amps - lastLimit) > 1.0) {
+    if (Math.abs(amps - lastLimit) > 0.1) {
       io.setStatorCurrentLimit(amps);
       lastLimit = amps;
     }
