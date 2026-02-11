@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -72,8 +71,6 @@ public class Robot extends LoggedRobot {
     robotContainer = new RobotContainer();
   }
 
-  private final PowerDistribution pdh = new PowerDistribution();
-
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
@@ -87,9 +84,6 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
-
-    Logger.recordOutput("PDH/TotalCurrent", pdh.getTotalCurrent());
-    Logger.recordOutput("PDH/Voltage", pdh.getVoltage());
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);
