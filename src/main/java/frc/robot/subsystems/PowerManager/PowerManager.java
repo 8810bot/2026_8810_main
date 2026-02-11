@@ -19,6 +19,8 @@ public class PowerManager extends SubsystemBase {
   // IDLE
   private final LoggedTunableNumber idleDrive =
       new LoggedTunableNumber("PowerManager/Profiles/IDLE/Drive", 40.0);
+  private final LoggedTunableNumber idleSteer =
+      new LoggedTunableNumber("PowerManager/Profiles/IDLE/Steer", 20.0);
   private final LoggedTunableNumber idleShooter =
       new LoggedTunableNumber("PowerManager/Profiles/IDLE/Shooter", 10.0);
   private final LoggedTunableNumber idleFeeder =
@@ -31,6 +33,8 @@ public class PowerManager extends SubsystemBase {
   // DRIVING
   private final LoggedTunableNumber drivingDrive =
       new LoggedTunableNumber("PowerManager/Profiles/DRIVING/Drive", 120.0);
+  private final LoggedTunableNumber drivingSteer =
+      new LoggedTunableNumber("PowerManager/Profiles/DRIVING/Steer", 60.0);
   private final LoggedTunableNumber drivingShooter =
       new LoggedTunableNumber("PowerManager/Profiles/DRIVING/Shooter", 10.0);
   private final LoggedTunableNumber drivingFeeder =
@@ -43,6 +47,8 @@ public class PowerManager extends SubsystemBase {
   // SHOOTING
   private final LoggedTunableNumber shootingDrive =
       new LoggedTunableNumber("PowerManager/Profiles/SHOOTING/Drive", 40.0);
+  private final LoggedTunableNumber shootingSteer =
+      new LoggedTunableNumber("PowerManager/Profiles/SHOOTING/Steer", 40.0);
   private final LoggedTunableNumber shootingShooter =
       new LoggedTunableNumber("PowerManager/Profiles/SHOOTING/Shooter", 100.0);
   private final LoggedTunableNumber shootingFeeder =
@@ -55,6 +61,8 @@ public class PowerManager extends SubsystemBase {
   // SHOOT_AND_DRIVE
   private final LoggedTunableNumber shootDriveDrive =
       new LoggedTunableNumber("PowerManager/Profiles/SHOOT_AND_DRIVE/Drive", 80.0);
+  private final LoggedTunableNumber shootDriveSteer =
+      new LoggedTunableNumber("PowerManager/Profiles/SHOOT_AND_DRIVE/Steer", 50.0);
   private final LoggedTunableNumber shootDriveShooter =
       new LoggedTunableNumber("PowerManager/Profiles/SHOOT_AND_DRIVE/Shooter", 80.0);
   private final LoggedTunableNumber shootDriveFeeder =
@@ -67,6 +75,8 @@ public class PowerManager extends SubsystemBase {
   // AUTO
   private final LoggedTunableNumber autoDrive =
       new LoggedTunableNumber("PowerManager/Profiles/AUTO/Drive", 100.0);
+  private final LoggedTunableNumber autoSteer =
+      new LoggedTunableNumber("PowerManager/Profiles/AUTO/Steer", 60.0);
   private final LoggedTunableNumber autoShooter =
       new LoggedTunableNumber("PowerManager/Profiles/AUTO/Shooter", 90.0);
   private final LoggedTunableNumber autoFeeder =
@@ -85,6 +95,7 @@ public class PowerManager extends SubsystemBase {
 
   // Min currents (absolute floor for safety)
   private static final double MIN_DRIVE_CURRENT = 20.0;
+  private static final double MIN_STEER_CURRENT = 20.0;
   private static final double MIN_SHOOTER_CURRENT = 10.0;
   private static final double MIN_FEEDER_CURRENT = 10.0;
   private static final double MIN_INTAKE_CURRENT = 10.0;
@@ -92,6 +103,7 @@ public class PowerManager extends SubsystemBase {
 
   public static class PowerDistributionState {
     public double driveCurrentLimit = 40.0;
+    public double steerCurrentLimit = 30.0;
     public double shooterCurrentLimit = 10.0;
     public double feederCurrentLimit = 10.0;
     public double intakeCurrentLimit = 10.0;
@@ -141,6 +153,7 @@ public class PowerManager extends SubsystemBase {
     Logger.recordOutput("PowerManager/Profile", currentProfile.toString());
     Logger.recordOutput("PowerManager/ThrottleFactor", throttleFactor);
     Logger.recordOutput("PowerManager/Limits/Drive", currentState.driveCurrentLimit);
+    Logger.recordOutput("PowerManager/Limits/Steer", currentState.steerCurrentLimit);
     Logger.recordOutput("PowerManager/Limits/Shooter", currentState.shooterCurrentLimit);
     Logger.recordOutput("PowerManager/Limits/Feeder", currentState.feederCurrentLimit);
     Logger.recordOutput("PowerManager/Limits/Intake", currentState.intakeCurrentLimit);

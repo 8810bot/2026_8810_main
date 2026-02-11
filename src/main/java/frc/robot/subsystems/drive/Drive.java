@@ -95,6 +95,7 @@ public class Drive extends SubsystemBase {
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
   private double lastDriveLimit = -1.0;
+  private double lastTurnLimit = -1.0;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
@@ -453,6 +454,15 @@ public class Drive extends SubsystemBase {
         module.setDriveCurrentLimit(amps);
       }
       lastDriveLimit = amps;
+    }
+  }
+
+  public void setSystemTurnCurrentLimit(double amps) {
+    if (Math.abs(amps - lastTurnLimit) > 1.0) {
+      for (var module : modules) {
+        module.setTurnCurrentLimit(amps);
+      }
+      lastTurnLimit = amps;
     }
   }
 }
