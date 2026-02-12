@@ -152,95 +152,127 @@ public class Aimbot extends Command {
     // === Select Control Strategy Based on Stage and Mode ===
     double finalShooterRPS = targetRPS * shooterRPSMultiplier.get();
     int controlMode = (int) ShooterSubsystem.shooterControlMode.get();
-    boolean isStable =
-        shooterSubsystem.isAtSetSpeed(finalShooterRPS) && speedStableTimer.get() > 0.1;
+    boolean isStable = false;
 
-    if (!isStable) {
-      // ====== Stage 1: Spin Up (Same for all modes) ======
-      shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
-      Logger.recordOutput("Aimbot/ShooterStage", "SPIN_UP");
-      Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
+    // === Mode 5: Pure Open Loop (Force Fire) ===
+    if (controlMode == 5) {
+      isShooting = true; // Always shooting
+      isStable = true;
+      double current = ShooterSubsystem.shooterOpenLoopCurrent.get();
+      shooterSubsystem.setShooterCurrent(current);
 
-    } else if (isShooting) {
-      // ====== Stage 2: Shooting (Branch based on mode) ======
-
-      if (controlMode == 0) {
-        // === Mode 0: Full PID + Pulse Feedforward (Current Scheme) ===
-        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, pulseFeedforward);
-        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
-        Logger.recordOutput("Aimbot/ShooterMode", "MODE0_PID_PULSE");
-        Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
-
-      } else if (controlMode == 1) {
-        // === Mode 1: Pure Open Loop Shooting ===
-        double openLoopCurrent = ShooterSubsystem.shooterOpenLoopCurrent.get();
-        shooterSubsystem.setShooterCurrent(openLoopCurrent);
-        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
-        Logger.recordOutput("Aimbot/ShooterMode", "MODE1_PURE_OPENLOOP");
-        Logger.recordOutput("Aimbot/OpenLoopCurrent", openLoopCurrent);
-
-      } else if (controlMode == 2) {
-        // === Mode 2: Weak PID + Open Loop Shooting (Optional Pulse Overlay) ===
-        double feedforward = ShooterSubsystem.shooterOpenLoopCurrent.get();
-
-        // Optional: Overlay Pulse Feedforward
-        if (ShooterSubsystem.shooterMode2EnablePulse.get() > 0.5) {
-          feedforward += pulseFeedforward;
-        }
-
-        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 1, feedforward);
-        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
-        Logger.recordOutput("Aimbot/ShooterMode", "MODE2_HYBRID_CONTROL");
-        Logger.recordOutput("Aimbot/HybridFeedforward", feedforward);
-        Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
-
-      } else if (controlMode == 3) {
-        // === Mode 3: Bang-Bang Controller (With Deadband) ===
-        double currentRPS = shooterSubsystem.getShooterRps();
-        double deadband = ShooterSubsystem.bangBangDeadband.get();
-        double error = finalShooterRPS - currentRPS;
-
-        double bangBangOutput;
-        if (error > deadband) {
-          // Speed significantly low, full acceleration
-          bangBangOutput = ShooterSubsystem.bangBangHighCurrent.get();
-        } else if (error < -deadband) {
-          // Speed significantly high, deceleration
-          bangBangOutput = ShooterSubsystem.bangBangLowCurrent.get();
-        } else {
-          // Inside deadband, use steady current
-          bangBangOutput = ShooterSubsystem.bangBangSteadyCurrent.get();
-        }
-
-        bangBangLastCurrent = bangBangOutput;
-        shooterSubsystem.setShooterCurrent(bangBangOutput);
-        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
-        Logger.recordOutput("Aimbot/ShooterMode", "MODE3_BANGBANG");
-        Logger.recordOutput("Aimbot/BangBangOutput", bangBangOutput);
-        Logger.recordOutput("Aimbot/BangBangError", error);
-      } else if (controlMode == 4) {
-        // === Mode 4: Enhanced Hybrid (Fixed Base + Pulse + Weak PID) ===
-        // Base: Fixed Open Loop Current
-        double feedforward = ShooterSubsystem.shooterOpenLoopCurrent.get();
-
-        // Overlay: Pulse Feedforward (Controlled by EnablePulse)
-        if (ShooterSubsystem.shooterMode2EnablePulse.get() > 0.5) {
-          feedforward += pulseFeedforward;
-        }
-
-        // Control: Use Slot1 (Weak PID) to compensate on top of total feedforward
-        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 1, feedforward);
-
-        Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
-        Logger.recordOutput("Aimbot/ShooterMode", "MODE4_ENHANCED_HYBRID");
-        Logger.recordOutput("Aimbot/TotalFeedforward", feedforward);
-      }
+      Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING_ALWAYS");
+      Logger.recordOutput("Aimbot/ShooterMode", "MODE5_PURE_OPENLOOP");
+      Logger.recordOutput("Aimbot/TotalCurrent", current);
 
     } else {
-      // ====== Stable but not shooting: Maintain spin up ======
-      shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
-      Logger.recordOutput("Aimbot/ShooterStage", "STABLE_IDLE");
-      Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
+      // === Modes 0-4: Standard Logic with Spin Up ===
+      isStable = shooterSubsystem.isAtSetSpeed(finalShooterRPS) && speedStableTimer.get() > 0.1;
+
+      // Special handling for Mode 4: Once shooting, force stable to prevent oscillation
+      if (controlMode == 4 && isShooting) {
+        isStable = true;
+      }
+
+      if (!isStable) {
+        // ====== Stage 1: Spin Up (Same for all modes) ======
+        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
+        Logger.recordOutput("Aimbot/ShooterStage", "SPIN_UP");
+        Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
+
+      } else if (isShooting) {
+        // ====== Stage 2: Shooting (Branch based on mode) ======
+
+        if (controlMode == 0) {
+          // === Mode 0: Full PID + Pulse Feedforward (Current Scheme) ===
+          shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, pulseFeedforward);
+          Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+          Logger.recordOutput("Aimbot/ShooterMode", "MODE0_PID_PULSE");
+          Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
+
+        } else if (controlMode == 1) {
+          // === Mode 1: Pure Open Loop Shooting ===
+          double openLoopCurrent = ShooterSubsystem.shooterOpenLoopCurrent.get();
+          shooterSubsystem.setShooterCurrent(openLoopCurrent);
+          Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+          Logger.recordOutput("Aimbot/ShooterMode", "MODE1_PURE_OPENLOOP");
+          Logger.recordOutput("Aimbot/OpenLoopCurrent", openLoopCurrent);
+
+        } else if (controlMode == 2) {
+          // === Mode 2: Weak PID + Open Loop Shooting (Optional Pulse Overlay) ===
+          double feedforward = ShooterSubsystem.shooterOpenLoopCurrent.get();
+
+          // Optional: Overlay Pulse Feedforward
+          if (ShooterSubsystem.shooterMode2EnablePulse.get() > 0.5) {
+            feedforward += pulseFeedforward;
+          }
+
+          shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 1, feedforward);
+          Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+          Logger.recordOutput("Aimbot/ShooterMode", "MODE2_HYBRID_CONTROL");
+          Logger.recordOutput("Aimbot/HybridFeedforward", feedforward);
+          Logger.recordOutput("Aimbot/PulseFeedforward", pulseFeedforward);
+
+        } else if (controlMode == 3) {
+          // === Mode 3: Bang-Bang Controller (With Deadband) ===
+          double currentRPS = shooterSubsystem.getShooterRps();
+          double deadband = ShooterSubsystem.bangBangDeadband.get();
+          double error = finalShooterRPS - currentRPS;
+
+          double bangBangOutput;
+          if (error > deadband) {
+            // Speed significantly low, full acceleration
+            bangBangOutput = ShooterSubsystem.bangBangHighCurrent.get();
+          } else if (error < -deadband) {
+            // Speed significantly high, deceleration
+            bangBangOutput = ShooterSubsystem.bangBangLowCurrent.get();
+          } else {
+            // Inside deadband, use steady current
+            bangBangOutput = ShooterSubsystem.bangBangSteadyCurrent.get();
+          }
+
+          bangBangLastCurrent = bangBangOutput;
+          shooterSubsystem.setShooterCurrent(bangBangOutput);
+          Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+          Logger.recordOutput("Aimbot/ShooterMode", "MODE3_BANGBANG");
+          Logger.recordOutput("Aimbot/BangBangOutput", bangBangOutput);
+          Logger.recordOutput("Aimbot/BangBangError", error);
+        } else if (controlMode == 4) {
+          // === Mode 4: Enhanced Hybrid (RIO-Side Control) ===
+          // 1. Base Current (Open Loop)
+          double baseCurrent = ShooterSubsystem.shooterOpenLoopCurrent.get();
+
+          // 2. Pulse Current (Optional)
+          double pulseCurrent = 0.0;
+          if (ShooterSubsystem.shooterMode2EnablePulse.get() > 0.5) {
+            pulseCurrent = pulseFeedforward;
+          }
+
+          // 3. Weak PID Correction (P-Only)
+          double currentRPS = shooterSubsystem.getShooterRps();
+          double error = finalShooterRPS - currentRPS;
+          double kP = ShooterSubsystem.shooterSlot1_kP.get();
+          double pidOutput = error * kP;
+
+          // 4. Sum Total Current
+          double totalCurrent = baseCurrent + pulseCurrent + pidOutput;
+
+          // Command Motor with Pure Current
+          shooterSubsystem.setShooterCurrent(totalCurrent);
+
+          Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
+          Logger.recordOutput("Aimbot/ShooterMode", "MODE4_ENHANCED_HYBRID_RIO");
+          Logger.recordOutput("Aimbot/TotalFeedforward", baseCurrent + pulseCurrent);
+          Logger.recordOutput("Aimbot/TotalCurrent", totalCurrent);
+          Logger.recordOutput("Aimbot/PIDOutput", pidOutput);
+        }
+
+      } else {
+        // ====== Stable but not shooting: Maintain spin up ======
+        shooterSubsystem.setShooterRpsWithSlot(finalShooterRPS, 0, 0.0);
+        Logger.recordOutput("Aimbot/ShooterStage", "STABLE_IDLE");
+        Logger.recordOutput("Aimbot/ShooterMode", "SLOT0_PID");
+      }
     }
 
     shooterSubsystem.setHoodAngle(targetHoodAngle);

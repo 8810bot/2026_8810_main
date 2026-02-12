@@ -140,11 +140,11 @@ public class PowerManager extends SubsystemBase {
 
     // Simple hysteresis could be added here if needed, but linear throttling is usually stable
     // enough
-    if (voltage < dangerV) {
-      throttleFactor = 0.0;
-    } else if (voltage < warnV) {
-      throttleFactor = (voltage - dangerV) / (warnV - dangerV);
-    }
+    // if (voltage < dangerV) {
+    //   throttleFactor = 0.0;
+    // } else if (voltage < warnV) {
+    //   throttleFactor = (voltage - dangerV) / (warnV - dangerV);
+    // }
 
     // Update state based on profile and throttle
     updateDistributionState(throttleFactor);
