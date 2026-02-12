@@ -262,6 +262,7 @@ public class Aimbot extends Command {
 
           Logger.recordOutput("Aimbot/ShooterStage", "SHOOTING");
           Logger.recordOutput("Aimbot/ShooterMode", "MODE4_ENHANCED_HYBRID_RIO");
+          Logger.recordOutput("Aimbot/PulseFeedforward", pulseCurrent); // Explicitly log pulse
           Logger.recordOutput("Aimbot/TotalFeedforward", baseCurrent + pulseCurrent);
           Logger.recordOutput("Aimbot/TotalCurrent", totalCurrent);
           Logger.recordOutput("Aimbot/PIDOutput", pidOutput);

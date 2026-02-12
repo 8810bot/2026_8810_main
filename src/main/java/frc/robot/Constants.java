@@ -53,6 +53,27 @@ public final class Constants {
       distanceToHoodAngle.put(3.853, 17.0);
       distanceToHoodAngle.put(4.365, 21.0);
       distanceToHoodAngle.put(4.866, 23.0);
+
+      // // distanceToShooterRPS.put(0.834, 50.0);
+      // distanceToShooterRPS.put(1.265, 50.0);
+      // distanceToShooterRPS.put(1.807, 55.27);
+      // distanceToShooterRPS.put(2.325, 57.5);
+      // distanceToShooterRPS.put(2.820, 59.6);
+      // distanceToShooterRPS.put(3.275, 60.9);
+      // // distanceToShooterRPS.put(3.853, 59.0);
+      // // distanceToShooterRPS.put(4.365, 61.0);
+      // // distanceToShooterRPS.put(4.866, 63.0);
+
+      // // distanceToHoodAngle.put(0.834, 0.0);
+      // distanceToHoodAngle.put(1.265, 3.7);
+      // distanceToHoodAngle.put(1.807, 6.63);
+      // distanceToHoodAngle.put(2.325, 9.65);
+
+      // distanceToHoodAngle.put(2.820, 12.0);
+      // distanceToHoodAngle.put(3.275, 15.0);
+      // // distanceToHoodAngle.put(3.853, 17.0);
+      // // distanceToHoodAngle.put(4.365, 21.0);
+      // // distanceToHoodAngle.put(4.866, 23.0);
     }
   }
 
