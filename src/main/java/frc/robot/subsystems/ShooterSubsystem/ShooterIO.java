@@ -34,6 +34,10 @@ public interface ShooterIO {
     public double ShooterRPS = 0;
     public double ShooterCurrentAMPS = 0;
     public double ShooterTorqueCurrent = 0;
+    public double ShooterClosedLoopOutput = 0;
+    public double ShooterClosedLoopFeedForward = 0;
+    public double ShooterClosedLoopError = 0;
+    public double ShooterClosedLoopReference = 0;
     public double HoodAngle = 0;
     public double HoodVoltageV = 0;
     public double HoodCurrentAMPS = 0;

@@ -96,35 +96,109 @@ public class ShooterSubsystem extends SubsystemBase {
     // REMOVED: io.HoodSetZero(); - Dangerous to assume zero on boot
   }
 
-  // ... (keep intermediate code) ...
+  public void setShooterRps(double rps) {
+    setShooterRps(rps, 0.0);
+  }
+
+  public void setShooterRps(double rps, double feedforwardAmps) {
+    io.ShooterSetRps(rps, feedforwardAmps);
+  }
+
+  public void setShooterRpsWithSlot(double rps, int slot, double feedforwardAmps) {
+    io.ShooterSetRpsWithSlot(rps, slot, feedforwardAmps);
+  }
+
+  public void setShooterCurrent(double amps) {
+    io.ShooterSetCurrent(amps);
+  }
+
+  public void setShooterVoltage(double voltage) {
+    io.ShooterSetV(voltage);
+  }
+
+  public void setHoodAngle(double angle) {
+    io.HoodSetAngle(angle / 360);
+  }
+
+  public void setHoodZero() {
+    io.HoodSetZero();
+  }
+
+  public void setHoodVoltage(double voltage) {
+    io.HoodSetV(voltage);
+  }
+
+  public double getShooterRps() {
+    return inputs.ShooterRPS;
+  }
+
+  public double getShooterCurrentAmps() {
+    return inputs.ShooterCurrentAMPS;
+  }
+
+  public double getHoodAngle() {
+    return inputs.HoodAngle;
+  }
+
+  public double getHoodVoltage() {
+    return inputs.HoodVoltageV;
+  }
+
+  public double getHoodCurrentAmps() {
+    return inputs.HoodCurrentAMPS;
+  }
+
+  public void setPeakReverseTorque(double current) {
+    if (Math.abs(current - shooterPeakReverseTorque.get()) > 0.1) {
+      io.setPeakReverseTorque(current);
+    }
+  }
+
+  public void setSystemCurrentLimit(double amps) {
+    if (Math.abs(amps - lastShooterLimit) > 0.1) {
+      io.setStatorCurrentLimit(amps);
+      lastShooterLimit = amps;
+    }
+  }
+
+  public void setHoodSystemCurrentLimit(double amps) {
+    if (Math.abs(amps - lastHoodLimit) > 0.1) {
+      io.setHoodStatorCurrentLimit(amps);
+      lastHoodLimit = amps;
+    }
+  }
+
+  public void processLog() {
+    io.updateInputs(inputs);
+    Logger.processInputs("Shooter", inputs);
+  }
 
   /** Command to home the hood against the hardstop using current detection. */
   public Command runHoodHoming() {
     return Commands.sequence(
-            // Step 1: Run Homing (Run voltage until current spike, ignoring initial inrush)
-            Commands.run(
-                    () ->
-                        io.HoodSetV(
-                            frc.robot.Constants.ShooterSubsystemPID.HoodHomingConstants
-                                .kHomingVolts),
-                    this)
-                .raceWith(
-                    Commands.sequence(
-                        Commands.waitSeconds(0.2), // Ignore inrush current for 0.2s
-                        Commands.waitUntil(
-                            () ->
-                                Math.abs(inputs.HoodCurrentAMPS)
-                                    > frc.robot.Constants.ShooterSubsystemPID.HoodHomingConstants
-                                        .kHomingCurrentThresholdAmps))),
+        // Step 1: Run Homing (Run voltage until current spike, ignoring initial inrush)
+        Commands.run(
+                () ->
+                    io.HoodSetV(
+                        frc.robot.Constants.ShooterSubsystemPID.HoodHomingConstants.kHomingVolts),
+                this)
+            .raceWith(
+                Commands.sequence(
+                    Commands.waitSeconds(0.2), // Ignore inrush current for 0.2s
+                    Commands.waitUntil(
+                        () ->
+                            Math.abs(inputs.HoodCurrentAMPS)
+                                > frc.robot.Constants.ShooterSubsystemPID.HoodHomingConstants
+                                    .kHomingCurrentThresholdAmps))),
 
-            // Step 2: Stop and Zero
-            Commands.runOnce(
-                () -> {
-                  io.HoodSetV(0);
-                  io.HoodSetZero();
-                  System.out.println("[Shooter] Hood Homing Complete. Zero Set.");
-                },
-                this));
+        // Step 2: Stop and Zero
+        Commands.runOnce(
+            () -> {
+              io.HoodSetV(0);
+              io.HoodSetZero();
+              System.out.println("[Shooter] Hood Homing Complete. Zero Set.");
+            },
+            this));
   }
 
   public boolean isAtSetSpeed(double targetRPS) {
@@ -135,6 +209,13 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/RPS", inputs.ShooterRPS);
     SmartDashboard.putNumber("Shooter/CurrentAMPS", inputs.ShooterCurrentAMPS);
     SmartDashboard.putNumber("Shooter/TorqueCurrentAMPS", inputs.ShooterTorqueCurrent);
+    SmartDashboard.putNumber("Shooter/ClosedLoop/TotalOutput", inputs.ShooterClosedLoopOutput);
+    SmartDashboard.putNumber("Shooter/ClosedLoop/UserFeedForward", inputs.ShooterClosedLoopFeedForward);
+    SmartDashboard.putNumber(
+        "Shooter/ClosedLoop/PIDOutput",
+        inputs.ShooterClosedLoopOutput - inputs.ShooterClosedLoopFeedForward);
+    SmartDashboard.putNumber("Shooter/ClosedLoop/Error", inputs.ShooterClosedLoopError);
+    SmartDashboard.putNumber("Shooter/ClosedLoop/Reference", inputs.ShooterClosedLoopReference);
     SmartDashboard.putNumber("Shooter/HoodAngle", inputs.HoodAngle);
     SmartDashboard.putNumber("Shooter/HoodVoltageV", inputs.HoodVoltageV);
     SmartDashboard.putNumber("Shooter/HoodCurrentAMPS", inputs.HoodCurrentAMPS);

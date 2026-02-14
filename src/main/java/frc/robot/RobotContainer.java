@@ -10,7 +10,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -29,6 +28,7 @@ import frc.robot.commands.Aimbot;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeSwing;
+import frc.robot.commands.ManualShoot;
 import frc.robot.commands.PivotInit;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
@@ -308,23 +308,12 @@ public class RobotContainer {
             },
             shooterSubsystem));
 
-    // Manual Shooter Control (POV Left)
+    // Manual Shooter Control with Mode System (POV Left)
     controller
         .povLeft()
-        .toggleOnTrue(
-            Commands.runEnd(
-                () -> {
-                  shooterSubsystem.setShooterRps(ShooterTestRPS.get());
-                  // Keep manual hood control active while shooting
-                  double hoodVolts = -MathUtil.applyDeadband(controller.getRightY(), 0.1) * 12.0;
-                  shooterSubsystem.setHoodVoltage(hoodVolts);
-                },
-                () -> {
-                  shooterSubsystem.setShooterVoltage(0);
-                },
-                shooterSubsystem));
+        .toggleOnTrue(new ManualShoot(shooterSubsystem, () -> controller.getRightY()));
 
-    // Manual Feed and Swing (POV Down)
+    // Manual Feed and Swing (POV Down) - RPS closed-loop control
     controller
         .povDown()
         .toggleOnTrue(
@@ -335,12 +324,12 @@ public class RobotContainer {
                 .alongWith(
                     Commands.runEnd(
                         () -> {
-                          feederSubsystem.setIndexerVoltage(IndexerShootVolts.get());
-                          feederSubsystem.setBeltVoltage(BeltShootVolts.get());
+                          feederSubsystem.setIndexerRps(IndexerTestRPS.get());
+                          feederSubsystem.setBeltRps(BeltTestRPS.get());
                         },
                         () -> {
-                          feederSubsystem.setIndexerVoltage(0);
-                          feederSubsystem.setBeltVoltage(0);
+                          feederSubsystem.setIndexerRps(0);
+                          feederSubsystem.setBeltRps(0);
                         },
                         feederSubsystem)));
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)

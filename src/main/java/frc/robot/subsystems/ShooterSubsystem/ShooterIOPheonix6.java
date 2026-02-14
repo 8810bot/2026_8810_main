@@ -206,6 +206,11 @@ public class ShooterIOPheonix6 implements ShooterIO {
                 + shooterMotor2.getTorqueCurrent().getValueAsDouble()
                 + shooterMotor3.getTorqueCurrent().getValueAsDouble())
             / 3.0;
+    inputs.ShooterClosedLoopOutput = shooterMotor1.getClosedLoopOutput().getValueAsDouble();
+    inputs.ShooterClosedLoopFeedForward =
+        shooterMotor1.getClosedLoopFeedForward().getValueAsDouble();
+    inputs.ShooterClosedLoopError = shooterMotor1.getClosedLoopError().getValueAsDouble();
+    inputs.ShooterClosedLoopReference = shooterMotor1.getClosedLoopReference().getValueAsDouble();
     inputs.HoodAngle = hoodMotor.getPosition().getValueAsDouble();
     inputs.HoodVoltageV = hoodMotor.getMotorVoltage().getValueAsDouble();
     inputs.HoodCurrentAMPS = hoodMotor.getSupplyCurrent().getValueAsDouble();
