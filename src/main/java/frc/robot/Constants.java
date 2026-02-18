@@ -27,6 +27,45 @@ public final class Constants {
     public static final double fieldmid = 4.0345;
     public static final double downtrench = 0.66599;
     public static final double uptrench = 7.40334;
+    public static final double autonShootTimeoutSeconds = 3.0;
+
+    public static InterpolatingDoubleTreeMap distanceToShooterRPS =
+        new InterpolatingDoubleTreeMap();
+    public static InterpolatingDoubleTreeMap distanceToHoodAngle = new InterpolatingDoubleTreeMap();
+
+    static {
+      distanceToShooterRPS.put(0.834, 50.0);
+      distanceToShooterRPS.put(1.318, 50.0);
+      distanceToShooterRPS.put(1.877, 53.0);
+      distanceToShooterRPS.put(2.384, 55.0);
+      distanceToShooterRPS.put(2.873, 57.0);
+      distanceToShooterRPS.put(3.305, 58.0);
+      distanceToShooterRPS.put(3.853, 59.0);
+      distanceToShooterRPS.put(4.365, 61.0);
+      distanceToShooterRPS.put(4.866, 63.0);
+
+      distanceToHoodAngle.put(0.834, 0.0);
+      distanceToHoodAngle.put(1.318, 4.0);
+      distanceToHoodAngle.put(1.877, 7.0);
+      distanceToHoodAngle.put(2.384, 10.0);
+      distanceToHoodAngle.put(2.873, 11.0);
+      distanceToHoodAngle.put(3.305, 13.0);
+      distanceToHoodAngle.put(3.853, 17.0);
+      distanceToHoodAngle.put(4.365, 21.0);
+      distanceToHoodAngle.put(4.866, 23.0);
+    }
+  }
+
+  public static final class MotorCANIds {
+    public static final String CanBusName = "mainCAN";
+    public static final int shooterMotor1CANId = 50;
+    public static final int shooterMotor2CANId = 51;
+    public static final int shooterMotor3CANId = 52;
+    public static final int hoodMotorCANId = 53;
+    public static final int beltMotorCANId = 41;
+    public static final int indexerMotorCANId = 40;
+    public static final int intakePivotMotorCANId = 61;
+    public static final int intakeMotorCANId = 60;
   }
 
   public static final Mode simMode = Mode.SIM;
@@ -54,5 +93,67 @@ public final class Constants {
 
     /** Replaying from a log file. */
     REPLAY
+  }
+
+  public static class FeederSubsystemPID {
+    public static final double indexerKP = 10;
+    public static final double indexerKI = 0;
+    public static final double indexerKD = 0;
+    public static final double indexerKS = 0;
+    public static final double indexerKV = 0;
+    public static final double beltKP = 10;
+    public static final double beltKI = 0;
+    public static final double beltKD = 0;
+    public static final double beltKS = 0;
+    public static final double beltKV = 0;
+  }
+
+  public static class IntakePID {
+    public static final double intakeKP = 10;
+    public static final double intakeKI = 0;
+    public static final double intakeKD = 0;
+    public static final double intakeKS = 0;
+    public static final double intakeKV = 0;
+    public static final double pivotKP = 200;
+    public static final double pivotKI = 1;
+    public static final double pivotKD = 0;
+    public static final double pivotKS = 0.4;
+    public static final double pivotKV = 0;
+    public static final double pivotKG = 0.2;
+    public static final double pivotGearRatio = 53.3;
+    public static final double pivotMotionMagicCruiseVelocity = 0.4;
+    public static final double pivotMotionMagicAcceleration = 6.4;
+    public static final double pivotMotionMagicJerk = 0;
+    public static final double pivotThresholdCurrentAmps = 5.0;
+  }
+
+  public static class ShooterSubsystemPID {
+    public static final double shooterKP = 7;
+    public static final double shooterKI = 0;
+    public static final double shooterKD = 0.15;
+    public static final double shooterKS = 0;
+    public static final double shooterKV = 0;
+    public static final double hoodGearRatio = 8. * 13.;
+    public static final double hoodKP = 1000;
+    public static final double hoodKI = 0;
+    public static final double hoodKD = 200;
+    public static final double hoodKS = 0;
+    public static final double hoodKV = 0;
+
+    public static final double swing_angle_1 = 0;
+    public static final double swing_angle_2 = 40;
+
+    public static final double hoodMotionMagicCruiseVelocity = 0.5;
+    public static final double hoodMotionMagicAcceleration = 4;
+    public static final double hoodMotionMagicJerk = 0;
+
+    public static final class HoodHomingConstants {
+      public static final double kHomingVolts = -1.0; // Reduced to -1.0V for safety as requested
+      public static final double kHomingCurrentThresholdAmps =
+          1.5; // Tune this value based on stall current
+      public static final double kHomingVelocityThreshold =
+          0.5; // Consider stalled if velocity is low
+      public static final double kHomingTimeThresholdSec = 0.1; // Time to be considered stalled
+    }
   }
 }

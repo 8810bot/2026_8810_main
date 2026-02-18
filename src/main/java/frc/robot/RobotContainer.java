@@ -8,6 +8,9 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -19,16 +22,22 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.AimandDrive;
+import frc.robot.commands.Aimbot;
 import frc.robot.commands.AutonTrench;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeSwing;
+import frc.robot.commands.PivotInit;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.FeederSubsystem.FeederSubsystem;
+import frc.robot.subsystems.IntakeSubsystem.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem.ShooterSubsystem;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -41,13 +50,25 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
 
+  // path planner
+
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
+  public final LoggedTunableNumber ShooterTestRPS = new LoggedTunableNumber("SHooterRPS", 60);
+  public final LoggedTunableNumber IndexerTestRPS = new LoggedTunableNumber("IndexerRPS", 50);
+  public final LoggedTunableNumber BeltTestRPS = new LoggedTunableNumber("BeltRPS", 60);
+  public final LoggedTunableNumber IndexerShootVolts =
+      new LoggedTunableNumber("IndexerShootVolts", 12.0);
+  public final LoggedTunableNumber BeltShootVolts = new LoggedTunableNumber("BeltShootVolts", 12.0);
+  public final LoggedTunableNumber HoodAngle = new LoggedTunableNumber("HoodAngle", 0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
+  public ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+  public FeederSubsystem feederSubsystem = new FeederSubsystem();
+  public IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /** The container for the robot. Contains subsystems, OI devices, a nd commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
@@ -104,6 +125,8 @@ public class RobotContainer {
         break;
     }
 
+    NamedCommands.registerCommand("AIMandShoot", new Aimbot(IndexerShootVolts, BeltShootVolts));
+
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -136,6 +159,7 @@ public class RobotContainer {
     autoChooser.addOption(
         "Rotate FL Module to 90 Degrees",
         DriveCommands.rotateModuleToAngle(drive, 0, Rotation2d.fromDegrees(90)));
+    autoChooser.addDefaultOption("default", new PathPlannerAuto("New Auto"));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -156,24 +180,7 @@ public class RobotContainer {
             () -> -controller.getRawAxis(0),
             () -> -controller.getRawAxis(4)));
 
-    // Lock to 0° when A button is held
-    controller
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero));
-
-    // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-    controller
-        .povUp()
-        .whileTrue(
-            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(1, 0, 0)), drive)
-                .alongWith(new WaitCommand(20)));
-    // Reset gyro to 0° when B button is pressed
+    // Drive and gyro controls
     controller
         .b()
         .onTrue(
@@ -183,23 +190,91 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
+    controller
+        .povUp()
+        .whileTrue(
+            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(1, 0, 0)), drive)
+                .alongWith(new WaitCommand(20)));
+    controller
+        .povRight()
+        .whileTrue(
+            new InstantCommand(() -> drive.runVelocity(new ChassisSpeeds(0, 1, 0)), drive)
+                .alongWith(new WaitCommand(20)));
 
-    // Y button: Rotate to 90 degrees
-    controller.y().onTrue(DriveCommands.rotateToAngle(drive, Rotation2d.fromDegrees(90)));
-
-    // Left bumper: Rotate counter-clockwise 45 degrees
-    controller.leftBumper().onTrue(DriveCommands.rotateByAngle(drive, Rotation2d.fromDegrees(45)));
-
-    // Right bumper: Rotate clockwise 45 degrees
+    // Intake controls
     controller
         .rightBumper()
-        .onTrue(DriveCommands.rotateByAngle(drive, Rotation2d.fromDegrees(-45)));
-
+        .onTrue(new InstantCommand(() -> intakeSubsystem.setPivotZero()).ignoringDisable(true));
     controller
-        .leftTrigger()
-        .whileTrue(
-            new AimandDrive(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
-    controller.rightStick().whileTrue(new AutonTrench(drive, () -> controller.getLeftY()));
+        .leftBumper()
+        .whileTrue(new InstantCommand(() -> intakeSubsystem.setIntakeRps(60)))
+        .onFalse(new InstantCommand(() -> intakeSubsystem.setIntakeVoltage(0)));
+    controller.a().onTrue(new PivotInit(intakeSubsystem));
+    controller.y().whileTrue(new IntakeSwing(intakeSubsystem, 0, 40));
+
+    // Shooter controls
+    // Switch to X pattern when X button is pressed
+    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    controller
+        .x()
+        .onTrue(
+            new InstantCommand(() -> shooterSubsystem.setHoodZero())
+                .ignoringDisable(true)
+                .alongWith(new InstantCommand(() -> intakeSubsystem.setPivotZero())));
+    controller.rightTrigger().whileTrue(new Aimbot(IndexerShootVolts, BeltShootVolts));
+
+    // Manual Shooter Control (POV Left)
+    controller
+        .povLeft()
+        .toggleOnTrue(
+            Commands.runEnd(
+                () -> {
+                  shooterSubsystem.setShooterRps(ShooterTestRPS.get());
+                  // Keep manual hood control active while shooting
+                  double hoodVolts = -MathUtil.applyDeadband(controller.getRightY(), 0.1) * 12.0;
+                  shooterSubsystem.setHoodVoltage(hoodVolts);
+                },
+                () -> {
+                  shooterSubsystem.setShooterVoltage(0);
+                },
+                shooterSubsystem));
+
+    // Assisted trench routine
+    controller
+        .rightStick()
+        .whileTrue(new AutonTrench(drive, shooterSubsystem, () -> controller.getLeftY()));
+
+    // Manual Feed and Swing (POV Down)
+    controller
+        .povDown()
+        .toggleOnTrue(
+            new IntakeSwing(
+                    intakeSubsystem,
+                    Constants.ShooterSubsystemPID.swing_angle_1,
+                    Constants.ShooterSubsystemPID.swing_angle_2)
+                .alongWith(
+                    Commands.runEnd(
+                        () -> {
+                          feederSubsystem.setIndexerVoltage(IndexerShootVolts.get());
+                          feederSubsystem.setBeltVoltage(BeltShootVolts.get());
+                        },
+                        () -> {
+                          feederSubsystem.setIndexerVoltage(0);
+                          feederSubsystem.setBeltVoltage(0);
+                        },
+                        feederSubsystem)));
+  }
+
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
+  }
+}
+
     // D-Pad controls for fine translation (0.5x max speed, Field-Relative)
     // Forward (Up)
     // controller
@@ -253,14 +328,3 @@ public class RobotContainer {
     //                         0.0,
     //                         drive.getRotation())),
     //             drive));
-  }
-
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
-  }
-}

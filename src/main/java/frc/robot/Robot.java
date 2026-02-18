@@ -102,6 +102,9 @@ public class Robot extends LoggedRobot {
   public void autonomousInit() {
     autonomousCommand = robotContainer.getAutonomousCommand();
 
+    // Run hood homing at the start of autonomous
+    robotContainer.shooterSubsystem.runHoodHoming().schedule();
+
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
@@ -122,6 +125,8 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+    // Also run homing in teleop init just in case auto was skipped
+    robotContainer.shooterSubsystem.runHoodHoming().schedule();
   }
 
   /** This function is called periodically during operator control. */
